@@ -41,13 +41,13 @@
     "ios",
     "android"
   ],
-  "repository": "https://github.com/candlefinance",
+  "repository": "https://github.com/candlefinance/faster-image",
   "author": "Gary Tokman <gary@trycandle.com> (https://candle.fi)",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/candlefinance/issues"
+    "url": "https://github.com/candlefinance/faster-image/issues"
   },
-  "homepage": "https://github.com/candlefinance#readme",
+  "homepage": "https://github.com/candlefinance/faster-image#readme",
   "publishConfig": {
     "registry": "https://registry.npmjs.org/"
   },
