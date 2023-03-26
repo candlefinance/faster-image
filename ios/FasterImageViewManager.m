@@ -12,6 +12,10 @@ RCT_EXPORT_VIEW_PROPERTY(thumbhash, NSString)
 
 RCT_EXPORT_VIEW_PROPERTY(resizeMode, NSString)
 
+RCT_EXPORT_VIEW_PROPERTY(cachePolicy, NSString)
+
+RCT_EXPORT_VIEW_PROPERTY(transitionDuration, NSNumber)
+
 RCT_EXPORT_VIEW_PROPERTY(showActivityIndicator, BOOL)
 
 RCT_EXPORT_VIEW_PROPERTY(onError, RCTDirectEventBlock)

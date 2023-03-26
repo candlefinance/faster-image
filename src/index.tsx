@@ -11,24 +11,20 @@ const LINKING_ERROR =
   '- You rebuilt the app after installing the package\n' +
   '- You are not using Expo Go\n';
 
-/*
- * FasterImageView Props
- * @style: ViewStyle
- * @url: string
- * @base64Placeholder: string
- * @blurhash: string
- * @resizeMode: 'cover' | 'contain' | 'center' | 'fill'
- * @showActivityIndicator: boolean
- * @onError: (result: { nativeEvent: { error: string } }) => void
- * @onSuccess: (result: {
- *  nativeEvent: {
- *   width: number;
- *  height: number;
- * isCached: boolean;
- * cacheKey: string;
- * source: string;
- * };
- * }) => void
+/**
+ * FasterImageProps
+ * @typedef FasterImageProps
+ * @property {ViewStyle} style - Style of the image
+ * @property {string} url - URL of the image **required**
+ * @property {string} [base64Placeholder] - Base64 encoded placeholder image
+ * @property {string} [blurhash] - Blurhash of the image (base64 encoded)
+ * @property {string} [thumbhash] - Thumbhash of the image (base64 encoded)
+ * @property {('cover' | 'contain' | 'center' | 'fill')} [resizeMode] - Resize mode of the image
+ * @property {boolean} [showActivityIndicator] - Show activity indicator while loading, overrides placeholder. Defaults to false
+ * @property {number} [transitionDuration] - Duration of the transition animation in seconds, defaults to 0.75
+ * @property {('memory' | 'discWithCacheContol' | 'discNoCacheControl')} [cachePolicy] - Cache [policy](https://kean-docs.github.io/nuke/documentation/nuke/imagepipeline), defaults to 'memory'. 'discWithCacheContol' will cache the image in the disc and use the cache control headers to determine if the image should be re-fetched. 'discNoCacheControl' will cache the image in the disc and never re-fetch it.
+ * @property {(result: { nativeEvent: { error: string } }) => void} [onError] - Callback for when an error occurs
+ * @property {(result: { nativeEvent: { width: number; height: number; source: string; } }) => void} [onSuccess] - Callback for when the image loads successfully
  * */
 export type FasterImageProps = {
   style: ViewStyle;
@@ -38,13 +34,13 @@ export type FasterImageProps = {
   thumbhash?: string;
   resizeMode?: 'cover' | 'contain' | 'center' | 'fill';
   showActivityIndicator?: boolean;
+  transitionDuration?: number;
+  cachePolicy?: 'memory' | 'discWithCacheContol' | 'discNoCacheControl';
   onError?: (result: { nativeEvent: { error: string } }) => void;
   onSuccess?: (result: {
     nativeEvent: {
       width: number;
       height: number;
-      isCached: boolean;
-      cacheKey: string;
       source: string;
     };
   }) => void;
@@ -53,12 +49,10 @@ export type FasterImageProps = {
 const ComponentName = 'FasterImageView';
 
 /**
- * FasterImageView is a React Native component that renders an UIImageView on iOS.
- * * Android is not supported.
- * * Image types supported: PNG, JPEG, and GIF.
+ * FasterImageView is a React Native component that renders an Image on iOS.
+ * * Image types supported: PNG & JPEG.
  * * Supports blurhash, base64 placeholders, and caching.
- * * Backed by Kingfisher, a powerful, pure-Swift library for downloading and caching images from the web.
- * * Check out the docs for more info: https://github.com/onevcat/Kingfisher
+ * * Backed by [Nuke](https://github.com/kean/Nuke.git), a small, performant image loading library written in Swift.
  * @param props: FasterImageProps
  * @returns FasterImageView
  * @example
