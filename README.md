@@ -23,13 +23,13 @@ yarn add @candlefinance/faster-image
 import { FasterImageView } from '@candlefinance/faster-image';
 
 <FasterImageView
-  url="https://picsum.photos/seed/3240/4000/3000"
   onError={(event) => console.warn(event.nativeEvent.error)}
   style={{ width: 400, height: 300 }}
   resizeMode="contain"
   thumbhash="k0oGLQaSVsJ0BVhn2oq2Z5SQUQcZ"
-  cachePolicy="discWithCacheControl"
+  cachePolicy="discNoCacheControl"
   transitionDuration={0.3}
+  url="https://picsum.photos/seed/3240/4000/3000"
 />;
 ```
 

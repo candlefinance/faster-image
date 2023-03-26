@@ -28,7 +28,6 @@ const LINKING_ERROR =
  * */
 export type FasterImageProps = {
   style: ViewStyle;
-  url: string;
   base64Placeholder?: string;
   blurhash?: string;
   thumbhash?: string;
@@ -36,6 +35,7 @@ export type FasterImageProps = {
   showActivityIndicator?: boolean;
   transitionDuration?: number;
   cachePolicy?: 'memory' | 'discWithCacheControl' | 'discNoCacheControl';
+  url: string;
   onError?: (result: { nativeEvent: { error: string } }) => void;
   onSuccess?: (result: {
     nativeEvent: {

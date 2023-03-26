@@ -1,21 +1,44 @@
 import * as React from 'react';
 
 import { FasterImageView } from '@candlefinance/faster-image';
-import { StyleSheet, View } from 'react-native';
+// import FastImage from 'react-native-fast-image';
+import { Dimensions, FlatList, SafeAreaView, StyleSheet } from 'react-native';
 
 export default function App() {
+  const imageURLs = Array.from(
+    { length: 1000 },
+    (_, i) => `https://picsum.photos/seed/${i}/100/100`
+  );
+  const screenWidth = Dimensions.get('window').width;
   return (
-    <View style={styles.container}>
-      <FasterImageView
-        url="https://picsum.photos/seed/3240/4000/3000"
-        onError={(event) => console.warn(event.nativeEvent.error)}
-        style={styles.box}
-        resizeMode="contain"
-        thumbhash="k0oGLQaSVsJ0BVhn2oq2Z5SQUQcZ"
-        cachePolicy="discWithCacheControl"
-        transitionDuration={0.3}
+    <SafeAreaView style={styles.container}>
+      <FlatList
+        keyExtractor={(item) => item}
+        data={imageURLs}
+        numColumns={3}
+        getItemLayout={(data, index) => ({
+          length: 100,
+          offset: 100 * index,
+          index,
+        })}
+        renderItem={({ item }) => (
+          <FasterImageView
+            onError={(event) => console.warn(event.nativeEvent.error)}
+            style={{ width: screenWidth / 3, height: 100 }}
+            transitionDuration={0}
+            cachePolicy="discWithCacheControl"
+            url={item}
+          />
+          // <FastImage
+          //   style={{ width: screenWidth / 3, height: 100 }}
+          //   source={{
+          //     uri: item,
+          //   }}
+          //   resizeMode={FastImage.resizeMode.cover}
+          // />
+        )}
       />
-    </View>
+    </SafeAreaView>
   );
 }
 
