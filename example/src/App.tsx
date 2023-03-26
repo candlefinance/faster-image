@@ -27,7 +27,8 @@ export default function App() {
             // eslint-disable-next-line react-native/no-inline-styles
             style={{ width: screenWidth / 3, height: 100 }}
             transitionDuration={0}
-            cachePolicy="discWithCacheControl"
+            cachePolicy="memory"
+            blurhash="LGF5]+Yk^6#M@-5c,1J5@[or[Q6."
             url={item}
           />
           // <FastImage

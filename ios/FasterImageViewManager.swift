@@ -15,7 +15,7 @@ final class FasterImageViewManager: RCTViewManager {
 
 /// A wrapper around `LazyImageView` to make it compatible with React Native.
 final class FasterImageView: UIView {
-
+    
     // MARK: - Initializers
     
     init() {
@@ -28,69 +28,103 @@ final class FasterImageView: UIView {
             lazyImageView.leadingAnchor.constraint(equalTo: leadingAnchor),
             lazyImageView.trailingAnchor.constraint(equalTo: trailingAnchor),
         ])
+        lazyImageView.priority = .normal
+        lazyImageView.onCompletion = { [weak self] result in
+            self?.completionHandler(with: result)
+        }
     }
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-
+    
     // MARK: - Views
     
     private lazy var lazyImageView = LazyImageView()
-
+    
     // MARK: - Callbacks
-
+    
     @objc var onError: RCTDirectEventBlock?
     @objc var onSuccess: RCTDirectEventBlock?
-
+    
     // MARK: - Properties
     
-    @objc var showActivityIndicator = false
-    @objc var resizeMode = "contain"
-    @objc var transitionDuration = 0.75
-    @objc var cachePolicy = "memory"
-
+    @objc var showActivityIndicator = false {
+        didSet {
+            lazyImageView.placeholderView = UIActivityIndicatorView()
+        }
+    }
+    
+    @objc var resizeMode = "contain" {
+        didSet {
+            lazyImageView.contentMode = ResizeMode(rawValue: resizeMode)?.contentMode ?? .scaleAspectFit
+        }
+    }
+    
+    @objc var transitionDuration = 0.75 {
+        didSet {
+            lazyImageView.transition = .fadeIn(duration: transitionDuration)
+        }
+    }
+    
+    @objc var cachePolicy = "memory" {
+        didSet {
+            lazyImageView.pipeline = CachePolicy(rawValue: cachePolicy)?.pipeline ?? .shared
+        }
+    }
+    
     // MARK: - Optional Properties
-
-    @objc var base64Placeholder: String?
-    @objc var blurhash: String?
-    @objc var thumbhash: String?
-
-    // MARK: - Setters
-
+    
+    @objc var base64Placeholder: String? {
+        didSet {
+            guard let base64Placeholder else {
+                return
+            }
+            DispatchQueue.global(qos: .userInteractive).async {
+                let image = UIImage(base64Placeholder: base64Placeholder)
+                DispatchQueue.main.async { [weak self] in
+                    self?.lazyImageView.placeholderImage = image
+                }
+            }
+        }
+    }
+    
+    @objc var blurhash: String? {
+        didSet {
+            guard let blurhash else {
+                return
+            }
+            DispatchQueue.global(qos: .userInteractive).async {
+                let image = UIImage(blurHash: blurhash, size: .init(width: 32, height: 32))
+                DispatchQueue.main.async { [weak self] in
+                    self?.lazyImageView.placeholderImage = image
+                }
+            }
+        }
+    }
+    
+    @objc var thumbhash: String? {
+        didSet {
+            guard let thumbhash else {
+                return
+            }
+            DispatchQueue.global(qos: .userInteractive).async {
+                let image = UIImage(base64Hash: thumbhash)
+                DispatchQueue.main.async { [weak self] in
+                    self?.lazyImageView.placeholderImage = image
+                }
+            }
+        }
+    }
+    
     @objc var url: String? = nil {
         didSet {
-            guard let url = url else {
+            guard let url else {
                 onError?([
                     "error": "Expected a valid url but got: \(url ?? "nil")",
                 ])
                 return
             }
-            if let placeholder =
-                UIImage(base64Placeholder: base64Placeholder) ??
-                UIImage(
-                    blurHash: blurhash,
-                    size: .init(width: 32, height: 32)
-                ) ??
-                UIImage(base64Hash: thumbhash) {
-                lazyImageView.placeholderImage = placeholder
-                lazyImageView.failureImage = placeholder
-            }
-            
-            if showActivityIndicator {
-                lazyImageView.placeholderView = UIActivityIndicatorView()
-            }
-            
-            lazyImageView.contentMode = ResizeMode(rawValue: resizeMode)?.contentMode ?? .scaleAspectFit
-            lazyImageView.priority = .normal
-            lazyImageView.transition = .fadeIn(duration: transitionDuration)
-            
-            lazyImageView.onCompletion = { [weak self] result in
-                self?.completionHandler(with: result)
-            }
-
-            lazyImageView.pipeline = CachePolicy(rawValue: cachePolicy)?.pipeline ?? .shared
-
             lazyImageView.url = URL(string: url)
         }
     }

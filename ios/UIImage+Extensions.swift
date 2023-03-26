@@ -7,7 +7,7 @@ public extension UIImage {
     
     convenience init?(base64Placeholder: String?) {
         guard
-            let base64Placeholder = base64Placeholder,
+            let base64Placeholder,
             let data = Data(base64Encoded: base64Placeholder, options: .ignoreUnknownCharacters)
         else { return nil }
         self.init(data: data)
@@ -16,7 +16,7 @@ public extension UIImage {
     // https://github.com/evanw/thumbhash
     convenience init?(base64Hash: String?) {
         guard
-            let base64Hash = base64Hash,
+            let base64Hash,
             let hash = Data(base64Encoded: base64Hash) else {
             return nil
         }
@@ -61,7 +61,7 @@ public extension UIImage {
     
     // https://github.com/woltapp/blurhash/blob/master/Swift/BlurHashDecode.swift
     convenience init?(blurHash: String?, size: CGSize, punch: Float = 1) {
-        guard let blurHash = blurHash, blurHash.count >= 6 else { return nil }
+        guard let blurHash, blurHash.count >= 6 else { return nil }
         
         let sizeFlag = String(blurHash[0]).decode83()
         let numY = (sizeFlag / 9) + 1
