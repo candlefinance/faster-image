@@ -1,3 +1,7 @@
+[![npm version](https://badge.fury.io/js/@candlefinance%faster-image.svg)](https://badge.fury.io/js/@candlefinance%2Ffaster-image)
+
+[![Watch the video](https://user-images.githubusercontent.com/12258850/227793826-c568d6b4-7cee-4c9f-b1ac-1beef3a2b3c5.png)](https://user-images.githubusercontent.com/12258850/227793749-d231199d-6058-4e6a-bb07-51b0ebfe9db5.mp4)
+
 A performant way to render images in React Native (**iOS only**) with a focus on speed and memory usage. Powered by [Nuke](https://github.com/kean/nuke), the smallest and most performant image loading library for iOS and macOS.
 
 > The framework is lean and compiles in under 2 seconds¹. Nuke has an automated test suite 2x the size of the codebase itself, ensuring excellent reliability. Every feature is carefully designed and optimized for performance.
