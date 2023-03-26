@@ -16,7 +16,7 @@ export default function App() {
         keyExtractor={(item) => item}
         data={imageURLs}
         numColumns={3}
-        getItemLayout={(data, index) => ({
+        getItemLayout={(_, index) => ({
           length: 100,
           offset: 100 * index,
           index,
@@ -24,6 +24,7 @@ export default function App() {
         renderItem={({ item }) => (
           <FasterImageView
             onError={(event) => console.warn(event.nativeEvent.error)}
+            // eslint-disable-next-line react-native/no-inline-styles
             style={{ width: screenWidth / 3, height: 100 }}
             transitionDuration={0}
             cachePolicy="discWithCacheControl"
