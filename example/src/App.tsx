@@ -12,7 +12,7 @@ export default function App() {
         style={styles.box}
         resizeMode="contain"
         thumbhash="k0oGLQaSVsJ0BVhn2oq2Z5SQUQcZ"
-        cachePolicy="discWithCacheContol"
+        cachePolicy="discWithCacheControl"
         transitionDuration={0.3}
       />
     </View>

@@ -46,7 +46,7 @@ final class FasterImageView: UIView {
     // MARK: - Properties
     
     @objc var showActivityIndicator = false
-    @objc var resizeMode = "cover"
+    @objc var resizeMode = "contain"
     @objc var transitionDuration = 0.75
     @objc var cachePolicy = "memory"
 

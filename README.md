@@ -1,22 +1,53 @@
-# @candlefinance/faster-image
+A performant way to render images in React Native (**iOS only**) with a focus on speed and memory usage. Powered by [Nuke](https://github.com/kean/nuke), the smallest and most performant image loading library for iOS and macOS.
 
-A nuke wrapper for RN
+> The framework is lean and compiles in under 2 seconds¹. Nuke has an automated test suite 2x the size of the codebase itself, ensuring excellent reliability. Every feature is carefully designed and optimized for performance.
+
+## Features
+
+- [x] Fast image loading
+- [x] Memory and disk caching
+- [x] Placeholder support: base64, blurhash, thumbhash and UIActivityIndicatorView
+- [x] Animated transition
+- [x] Typescript support
+- [x] Written in Swift
 
 ## Installation
 
 ```sh
-npm install @candlefinance/faster-image
+yarn add @candlefinance/faster-image
 ```
 
 ## Usage
 
 ```js
-import { FasterImageView } from "@candlefinance/faster-image";
+import { FasterImageView } from '@candlefinance/faster-image';
 
-// ...
-
-<FasterImageView color="tomato" />
+<FasterImageView
+  url="https://picsum.photos/seed/3240/4000/3000"
+  onError={(event) => console.warn(event.nativeEvent.error)}
+  style={{ width: 400, height: 300 }}
+  resizeMode="contain"
+  thumbhash="k0oGLQaSVsJ0BVhn2oq2Z5SQUQcZ"
+  cachePolicy="discWithCacheControl"
+  transitionDuration={0.3}
+/>;
 ```
+
+## Props
+
+| Prop                                            | Type     | Default | Description                                                                                          |
+| ----------------------------------------------- | -------- | ------- | ---------------------------------------------------------------------------------------------------- |
+| url                                             | string   |         | The URL of the image                                                                                 |
+| style                                           | object   |         | The style of the image                                                                               |
+| resizeMode                                      | string   | contain | The resize mode of the image                                                                         |
+| [thumbhash](https://github.com/evanw/thumbhash) | string   |         | The thumbhash of the image as a base64 encoded string to show while loading                          |
+| [blurhash](https://github.com/woltapp/blurhash) | string   |         | The blurhash of the image to show while loading                                                      |
+| showActivityIndicator                           | boolean  | false   | Whether to show the UIActivityIndicatorView indicator when the image is loading                      |
+| base64Placeholder                               | string   |         | The base64 encoded placeholder image to show while the image is loading                              |
+| cachePolicy                                     | string   | memory  | The cache policy of the image                                                                        |
+| transitionDuration                              | number   | 0.75    | The transition duration of the image                                                                 |
+| onError                                         | function |         | The function to call when an error occurs. The error is passed as the first argument of the function |
+| onSucess                                        | function |         | The function to call when the image is successfully loaded                                           |
 
 ## Contributing
 
@@ -25,7 +56,3 @@ See the [contributing guide](CONTRIBUTING.md) to learn how to contribute to the 
 ## License
 
 MIT
-
----
-
-Made with [create-react-native-library](https://github.com/callstack/react-native-builder-bob)

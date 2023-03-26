@@ -22,7 +22,7 @@ const LINKING_ERROR =
  * @property {('cover' | 'contain' | 'center' | 'fill')} [resizeMode] - Resize mode of the image
  * @property {boolean} [showActivityIndicator] - Show activity indicator while loading, overrides placeholder. Defaults to false
  * @property {number} [transitionDuration] - Duration of the transition animation in seconds, defaults to 0.75
- * @property {('memory' | 'discWithCacheContol' | 'discNoCacheControl')} [cachePolicy] - Cache [policy](https://kean-docs.github.io/nuke/documentation/nuke/imagepipeline), defaults to 'memory'. 'discWithCacheContol' will cache the image in the disc and use the cache control headers to determine if the image should be re-fetched. 'discNoCacheControl' will cache the image in the disc and never re-fetch it.
+ * @property {('memory' | 'discWithCacheControl' | 'discNoCacheControl')} [cachePolicy] - Cache [policy](https://kean-docs.github.io/nuke/documentation/nuke/imagepipeline), defaults to 'memory'. 'discWithCacheControl' will cache the image in the disc and use the cache control headers to determine if the image should be re-fetched. 'discNoCacheControl' will cache the image in the disc and never re-fetch it.
  * @property {(result: { nativeEvent: { error: string } }) => void} [onError] - Callback for when an error occurs
  * @property {(result: { nativeEvent: { width: number; height: number; source: string; } }) => void} [onSuccess] - Callback for when the image loads successfully
  * */
@@ -35,7 +35,7 @@ export type FasterImageProps = {
   resizeMode?: 'cover' | 'contain' | 'center' | 'fill';
   showActivityIndicator?: boolean;
   transitionDuration?: number;
-  cachePolicy?: 'memory' | 'discWithCacheContol' | 'discNoCacheControl';
+  cachePolicy?: 'memory' | 'discWithCacheControl' | 'discNoCacheControl';
   onError?: (result: { nativeEvent: { error: string } }) => void;
   onSuccess?: (result: {
     nativeEvent: {
