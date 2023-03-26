@@ -35,6 +35,7 @@ export type FasterImageProps = {
   url: string;
   base64Placeholder?: string;
   blurhash?: string;
+  thumbhash?: string;
   resizeMode?: 'cover' | 'contain' | 'center' | 'fill';
   showActivityIndicator?: boolean;
   onError?: (result: { nativeEvent: { error: string } }) => void;

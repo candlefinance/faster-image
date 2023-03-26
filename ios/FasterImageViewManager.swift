@@ -62,7 +62,8 @@ final class FasterImageView: UIImageView {
             UIImage(
                 blurHash: blurhash,
                 size: .init(width: 32, height: 32)
-            ),
+            ) ??
+            UIImage(base64Hash: thumbhash),
           options: [
             .transition(.fade(1)),
             .scaleFactor(UIScreen.main.scale),
