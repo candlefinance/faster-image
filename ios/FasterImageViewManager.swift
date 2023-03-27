@@ -125,13 +125,20 @@ final class FasterImageView: UIView {
             guard let failureImage else {
                 return
             }
+            let radius = borderRadius?.intValue
             DispatchQueue.global(qos: .userInteractive).async {
                 guard
-                    let image =
+                    var image =
                         UIImage(blurHash: failureImage, size: .init(width: 32, height: 32))
                         ?? UIImage(base64Placeholder: failureImage)
                         ?? UIImage(base64Hash: failureImage) else {
                     return
+                }
+                if let radius {
+                    let processor = ImageProcessors.RoundedCorners(radius: CGFloat(radius))
+                    if let newImage = processor.process(image) {
+                        image = newImage
+                    }
                 }
                 DispatchQueue.main.async { [weak self] in
                     self?.lazyImageView.failureImage = image
