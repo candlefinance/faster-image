@@ -103,6 +103,26 @@ final class FasterImageView: UIView {
         }
     }
     
+    @objc var failureImage: String? {
+        didSet {
+            guard let failureImage else {
+                return
+            }
+            DispatchQueue.global(qos: .userInteractive).async {
+                guard
+                    let image =
+                        UIImage(blurHash: failureImage, size: .init(width: 32, height: 32))
+                        ?? UIImage(base64Placeholder: failureImage)
+                        ?? UIImage(base64Hash: failureImage) else {
+                    return
+                }
+                DispatchQueue.main.async { [weak self] in
+                    self?.lazyImageView.failureImage = image
+                }
+            }
+        }
+    }
+    
     @objc var thumbhash: String? {
         didSet {
             guard let thumbhash else {
