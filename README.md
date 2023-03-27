@@ -59,8 +59,8 @@ import { FasterImageView } from '@candlefinance/faster-image';
 | cachePolicy               | string   | memory  | The cache policy of the image                                                                        |
 | transitionDuration        | number   | 0.75    | The transition duration of the image                                                                 |
 | borderRadius              | number   |         | Round the corners on the image                                                                       |
-| failureImage              | number   |         | If the image fails to download this will be set (blurhash, thumbhash, base64)                        |
-| progressiveLoadingEnabled | number   | false   | Progressively load images                                                                            |
+| failureImage              | string   |         | If the image fails to download this will be set (blurhash, thumbhash, base64)                        |
+| progressiveLoadingEnabled | boolean  | false   | Progressively load images                                                                            |
 | onError                   | function |         | The function to call when an error occurs. The error is passed as the first argument of the function |
 | onSucess                  | function |         | The function to call when the image is successfully loaded                                           |
 
