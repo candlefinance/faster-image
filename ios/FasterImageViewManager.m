@@ -15,7 +15,11 @@ RCT_EXPORT_VIEW_PROPERTY(resizeMode, NSString)
 RCT_EXPORT_VIEW_PROPERTY(cachePolicy, NSString)
 
 RCT_EXPORT_VIEW_PROPERTY(failureImage, NSString)
+
 RCT_EXPORT_VIEW_PROPERTY(borderRadius, NSNumber)
+
+RCT_EXPORT_VIEW_PROPERTY(progressiveLoadingEnabled, BOOL)
+
 RCT_EXPORT_VIEW_PROPERTY(transitionDuration, NSNumber)
 
 RCT_EXPORT_VIEW_PROPERTY(showActivityIndicator, BOOL)

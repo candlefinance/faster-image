@@ -26,7 +26,8 @@ export default function App() {
             onError={(event) => console.warn(event.nativeEvent.error)}
             // eslint-disable-next-line react-native/no-inline-styles
             style={{ width: screenWidth / 3, height: 100 }}
-            transitionDuration={0}
+            transitionDuration={0.75}
+            borderRadius={1}
             cachePolicy="memory"
             blurhash="LGF5]+Yk^6#M@-5c,1J5@[or[Q6."
             url={item}

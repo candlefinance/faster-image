@@ -61,9 +61,15 @@ final class FasterImageView: UIView {
         }
     }
     
-    @objc var transitionDuration = 0.75 {
+    @objc var transitionDuration: NSNumber = 0.75 {
         didSet {
-            lazyImageView.transition = .fadeIn(duration: transitionDuration)
+            lazyImageView.transition = .fadeIn(duration: transitionDuration.doubleValue)
+        }
+    }
+    
+    @objc var progressiveLoadingEnabled = false {
+        didSet {
+            lazyImageView.isProgressiveImageRenderingEnabled = progressiveLoadingEnabled
         }
     }
     

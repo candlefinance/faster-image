@@ -10,8 +10,12 @@ A performant way to render images in React Native (**iOS only**) with a focus on
 
 - [x] Fast image loading
 - [x] Memory and disk caching
-- [x] Placeholder support: base64, blurhash, thumbhash and UIActivityIndicatorView
+- [x] Placeholder support:
+  - [x] Blurhash
+  - [x] Thumbhash
+  - [x] Base64 encoded image
 - [x] Animated transition
+- [x] Failure image
 - [x] Typescript support
 - [x] Written in Swift
 
@@ -22,6 +26,10 @@ yarn add @candlefinance/faster-image
 ```
 
 ## Usage
+
+Simply import the `FasterImageView` component and any props below to customize it. Currently this library does not support every progressive image format. There are agruments to be made for supporting them, but for now it only supports JPEG and PNG.
+
+Progressive formats such as `webp` require custom decoding and are not first party supported by Apple. This makes the libary footprint larger and can be computationally expensive.
 
 ```js
 import { FasterImageView } from '@candlefinance/faster-image';
@@ -39,19 +47,22 @@ import { FasterImageView } from '@candlefinance/faster-image';
 
 ## Props
 
-| Prop                                            | Type     | Default | Description                                                                                          |
-| ----------------------------------------------- | -------- | ------- | ---------------------------------------------------------------------------------------------------- |
-| url                                             | string   |         | The URL of the image                                                                                 |
-| style                                           | object   |         | The style of the image                                                                               |
-| resizeMode                                      | string   | contain | The resize mode of the image                                                                         |
-| [thumbhash](https://github.com/evanw/thumbhash) | string   |         | The thumbhash of the image as a base64 encoded string to show while loading                          |
-| [blurhash](https://github.com/woltapp/blurhash) | string   |         | The blurhash of the image to show while loading                                                      |
-| showActivityIndicator                           | boolean  | false   | Whether to show the UIActivityIndicatorView indicator when the image is loading                      |
-| base64Placeholder                               | string   |         | The base64 encoded placeholder image to show while the image is loading                              |
-| cachePolicy                                     | string   | memory  | The cache policy of the image                                                                        |
-| transitionDuration                              | number   | 0.75    | The transition duration of the image                                                                 |
-| onError                                         | function |         | The function to call when an error occurs. The error is passed as the first argument of the function |
-| onSucess                                        | function |         | The function to call when the image is successfully loaded                                           |
+| Prop                      | Type     | Default | Description                                                                                          |
+| ------------------------- | -------- | ------- | ---------------------------------------------------------------------------------------------------- |
+| url                       | string   |         | The URL of the image                                                                                 |
+| style                     | object   |         | The style of the image                                                                               |
+| resizeMode                | string   | contain | The resize mode of the image                                                                         |
+| thumbhash                 | string   |         | The thumbhash of the image as a base64 encoded string to show while loading                          |
+| blurhash                  | string   |         | The blurhash of the image to show while loading                                                      |
+| showActivityIndicator     | boolean  | false   | Whether to show the UIActivityIndicatorView indicator when the image is loading                      |
+| base64Placeholder         | string   |         | The base64 encoded placeholder image to show while the image is loading                              |
+| cachePolicy               | string   | memory  | The cache policy of the image                                                                        |
+| transitionDuration        | number   | 0.75    | The transition duration of the image                                                                 |
+| borderRadius              | number   |         | Round the corners on the image                                                                       |
+| failureImage              | number   |         | If the image fails to download this will be set (blurhash, thumbhash, base64)                        |
+| progressiveLoadingEnabled | number   | false   | Progressively load images                                                                            |
+| onError                   | function |         | The function to call when an error occurs. The error is passed as the first argument of the function |
+| onSucess                  | function |         | The function to call when the image is successfully loaded                                           |
 
 ## Contributing
 
