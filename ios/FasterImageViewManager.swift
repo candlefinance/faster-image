@@ -73,6 +73,17 @@ final class FasterImageView: UIView {
         }
     }
     
+    @objc var borderRadius: NSNumber? = nil {
+        didSet {
+            guard let borderRadius else {
+                return
+            }
+            lazyImageView.processors = [
+                .roundedCorners(radius: CGFloat(borderRadius.intValue)),
+            ]
+        }
+    }
+    
     // MARK: - Optional Properties
     
     @objc var base64Placeholder: String? {
