@@ -4,41 +4,37 @@ import { FasterImageView } from '@candlefinance/faster-image';
 // import FastImage from 'react-native-fast-image';
 import { Dimensions, FlatList, SafeAreaView, StyleSheet } from 'react-native';
 
+const size = Dimensions.get('window').width / 3;
+
 export default function App() {
   const imageURLs = Array.from(
     { length: 1000 },
-    (_, i) => `https://picsum.photos/seed/${i}/100/100`
+    (_, i) => `https://picsum.photos/seed/${i}/1000/1000`
   );
-  const screenWidth = Dimensions.get('window').width;
+
   return (
     <SafeAreaView style={styles.container}>
       <FlatList
         keyExtractor={(item) => item}
         data={imageURLs}
         numColumns={3}
+        columnWrapperStyle={styles.column}
         getItemLayout={(_, index) => ({
-          length: 100,
-          offset: 100 * index,
+          length: size,
+          offset: size * index,
           index,
         })}
         renderItem={({ item }) => (
           <FasterImageView
             onError={(event) => console.warn(event.nativeEvent.error)}
-            // eslint-disable-next-line react-native/no-inline-styles
-            style={{ width: screenWidth / 3, height: 100 }}
+            style={styles.image}
+            rounded
             transitionDuration={0.75}
-            borderRadius={1}
-            cachePolicy="memory"
-            blurhash="LGF5]+Yk^6#M@-5c,1J5@[or[Q6."
+            cachePolicy="discNoCacheControl"
+            thumbhash="k0oGLQaSVsJ0BVhn2oq2Z5SQUQcZ"
+            failureImage="k0oGLQaSVsJ0BVhn2oq2Z5SQUQcZ"
             url={item}
           />
-          // <FastImage
-          //   style={{ width: screenWidth / 3, height: 100 }}
-          //   source={{
-          //     uri: item,
-          //   }}
-          //   resizeMode={FastImage.resizeMode.cover}
-          // />
         )}
       />
     </SafeAreaView>
@@ -46,14 +42,18 @@ export default function App() {
 }
 
 const styles = StyleSheet.create({
+  sep: { height: 24 },
+  image: {
+    width: size,
+    height: size,
+  },
   container: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  box: {
-    borderWidth: 1,
-    width: 300,
-    height: 300,
+  column: {
+    justifyContent: 'space-between',
+    width: Dimensions.get('window').width,
   },
 });
