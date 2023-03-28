@@ -38,7 +38,7 @@ export type FasterImageProps = {
   showActivityIndicator?: boolean;
   transitionDuration?: number;
   cachePolicy?: 'memory' | 'discWithCacheControl' | 'discNoCacheControl';
-  borderRadius?: number;
+  rounded?: boolean;
   failureImage?: string;
   progressiveLoadingEnabled?: boolean;
   url: string;

@@ -16,7 +16,7 @@ RCT_EXPORT_VIEW_PROPERTY(cachePolicy, NSString)
 
 RCT_EXPORT_VIEW_PROPERTY(failureImage, NSString)
 
-RCT_EXPORT_VIEW_PROPERTY(borderRadius, NSNumber)
+RCT_EXPORT_VIEW_PROPERTY(rounded, BOOL)
 
 RCT_EXPORT_VIEW_PROPERTY(progressiveLoadingEnabled, BOOL)
 

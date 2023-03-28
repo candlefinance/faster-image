@@ -61,7 +61,7 @@ final class FasterImageView: UIView {
         }
     }
     
-    @objc var transitionDuration: NSNumber = 0.75 {
+    @objc var transitionDuration: NSNumber = 0.5 {
         didSet {
             lazyImageView.transition = .fadeIn(duration: transitionDuration.doubleValue)
         }
@@ -79,13 +79,13 @@ final class FasterImageView: UIView {
         }
     }
     
-    @objc var borderRadius: NSNumber? = nil {
+    @objc var rounded: Bool = false {
         didSet {
-            guard let borderRadius else {
+            guard rounded else {
                 return
             }
             lazyImageView.processors = [
-                .roundedCorners(radius: CGFloat(borderRadius.intValue)),
+                ImageProcessors.Circle()
             ]
         }
     }
@@ -98,7 +98,15 @@ final class FasterImageView: UIView {
                 return
             }
             DispatchQueue.global(qos: .userInteractive).async {
-                let image = UIImage(base64Placeholder: base64Placeholder)
+                guard var image = UIImage(base64Placeholder: base64Placeholder) else {
+                    return
+                }
+                if self.rounded {
+                    let processor = ImageProcessors.Circle()
+                    if let newImage = processor.process(image) {
+                        image = newImage
+                    }
+                }
                 DispatchQueue.main.async { [weak self] in
                     self?.lazyImageView.placeholderImage = image
                 }
@@ -112,7 +120,18 @@ final class FasterImageView: UIView {
                 return
             }
             DispatchQueue.global(qos: .userInteractive).async {
-                let image = UIImage(blurHash: blurhash, size: .init(width: 32, height: 32))
+                guard var image = UIImage(
+                    blurHash: blurhash,
+                    size: .init(width: 32, height: 32)
+                ) else {
+                    return
+                }
+                if self.rounded {
+                    let processor = ImageProcessors.Circle()
+                    if let newImage = processor.process(image) {
+                        image = newImage
+                    }
+                }
                 DispatchQueue.main.async { [weak self] in
                     self?.lazyImageView.placeholderImage = image
                 }
@@ -125,8 +144,8 @@ final class FasterImageView: UIView {
             guard let failureImage else {
                 return
             }
-            let radius = borderRadius?.intValue
-            DispatchQueue.global(qos: .userInteractive).async {
+            DispatchQueue.global(qos: .userInteractive).async { [weak self] in
+                guard let self else { return }
                 guard
                     var image =
                         UIImage(blurHash: failureImage, size: .init(width: 32, height: 32))
@@ -134,8 +153,8 @@ final class FasterImageView: UIView {
                         ?? UIImage(base64Hash: failureImage) else {
                     return
                 }
-                if let radius {
-                    let processor = ImageProcessors.RoundedCorners(radius: CGFloat(radius))
+                if self.rounded {
+                    let processor = ImageProcessors.Circle()
                     if let newImage = processor.process(image) {
                         image = newImage
                     }
@@ -153,7 +172,15 @@ final class FasterImageView: UIView {
                 return
             }
             DispatchQueue.global(qos: .userInteractive).async {
-                let image = UIImage(base64Hash: thumbhash)
+                guard var image = UIImage(base64Hash: thumbhash) else {
+                    return
+                }
+                if self.rounded {
+                    let processor = ImageProcessors.Circle()
+                    if let newImage = processor.process(image) {
+                        image = newImage
+                    }
+                }
                 DispatchQueue.main.async { [weak self] in
                     self?.lazyImageView.placeholderImage = image
                 }
