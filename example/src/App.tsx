@@ -29,8 +29,8 @@ export default function App() {
             onError={(event) => console.warn(event.nativeEvent.error)}
             style={styles.image}
             rounded
-            transitionDuration={0.75}
-            cachePolicy="discNoCacheControl"
+            transitionDuration={0.3}
+            cachePolicy="memory"
             thumbhash="k0oGLQaSVsJ0BVhn2oq2Z5SQUQcZ"
             failureImage="k0oGLQaSVsJ0BVhn2oq2Z5SQUQcZ"
             url={item}

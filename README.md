@@ -21,9 +21,24 @@ A performant way to render images in React Native (**iOS only**) with a focus on
 
 ## Installation
 
+1. Add the package to your project:
+
 ```sh
 yarn add @candlefinance/faster-image
 ```
+
+2. Add the following source to the top of your [Podfile](./example/ios/Podfile) **(iOS 13+)**:
+
+```ruby
+source 'https://github.com/candlefinance/podspecs.git'
+```
+
+---
+
+**ℹ️**
+Nuke doesn't support Cocoapods and step 2 allows us to use it as a dependency.
+
+---
 
 ## Usage
 
