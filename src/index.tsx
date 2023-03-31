@@ -1,15 +1,11 @@
+import React from 'react';
 import {
-  requireNativeComponent,
-  UIManager,
+  Image,
+  ImageResizeMode,
+  ImageStyle,
   Platform,
-  ViewStyle,
+  requireNativeComponent,
 } from 'react-native';
-
-const LINKING_ERROR =
-  `The package '@candlefinance/faster-image' doesn't seem to be linked. Make sure: \n\n` +
-  Platform.select({ ios: "- You have run 'pod install'\n", default: '' }) +
-  '- You rebuilt the app after installing the package\n' +
-  '- You are not using Expo Go\n';
 
 /**
  * FasterImageProps
@@ -30,11 +26,10 @@ const LINKING_ERROR =
  * @property {(result: { nativeEvent: { width: number; height: number; source: string; } }) => void} [onSuccess] - Callback for when the image loads successfully
  * */
 export type FasterImageProps = {
-  style: ViewStyle;
-  base64Placeholder?: string;
+  style: ImageStyle;
   blurhash?: string;
   thumbhash?: string;
-  resizeMode?: 'cover' | 'contain' | 'center' | 'fill';
+  resizeMode?: ImageResizeMode;
   showActivityIndicator?: boolean;
   transitionDuration?: number;
   cachePolicy?: 'memory' | 'discWithCacheControl' | 'discNoCacheControl';
@@ -54,6 +49,33 @@ export type FasterImageProps = {
 
 const ComponentName = 'FasterImageView';
 
+const AndroidImage = (props: FasterImageProps) => {
+  return (
+    <Image
+      source={{ uri: props.url, cache: 'force-cache' }}
+      // eslint-disable-next-line react-native/no-inline-styles
+      style={{
+        ...props.style,
+        width: props.style.width ?? 0,
+        height: props.style.height ?? 0,
+        borderRadius: props.rounded ? (Number(props.style.width) ?? 0) / 2 : 0,
+      }}
+      onError={props.onError}
+      onLoad={(event) => {
+        const { width, height } = event.nativeEvent.source;
+        props.onSuccess?.({
+          nativeEvent: {
+            width,
+            height,
+            source: props.url,
+          },
+        });
+      }}
+      resizeMode={props.resizeMode}
+    />
+  );
+};
+
 /**
  * FasterImageView is a React Native component that renders an Image on iOS.
  * * Image types supported: PNG & JPEG.
@@ -72,9 +94,7 @@ const ComponentName = 'FasterImageView';
  *    blurhash="URCP@fof00WBWBa|ofj[00WB~qt7xufQRjay"
  * />
  * */
-export const FasterImageView =
-  UIManager.getViewManagerConfig(ComponentName) != null
-    ? requireNativeComponent<FasterImageProps>(ComponentName)
-    : () => {
-        throw new Error(LINKING_ERROR);
-      };
+export const FasterImageView = Platform.select({
+  ios: requireNativeComponent<FasterImageProps>(ComponentName),
+  android: AndroidImage as any,
+});
