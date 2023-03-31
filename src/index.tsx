@@ -53,13 +53,7 @@ const AndroidImage = (props: FasterImageProps) => {
   return (
     <Image
       source={{ uri: props.url, cache: 'force-cache' }}
-      // eslint-disable-next-line react-native/no-inline-styles
-      style={{
-        ...props.style,
-        width: props.style.width ?? 0,
-        height: props.style.height ?? 0,
-        borderRadius: props.rounded ? (Number(props.style.width) ?? 0) / 2 : 0,
-      }}
+      style={props.style}
       onError={props.onError}
       onLoad={(event) => {
         const { width, height } = event.nativeEvent.source;
@@ -96,5 +90,6 @@ const AndroidImage = (props: FasterImageProps) => {
  * */
 export const FasterImageView = Platform.select({
   ios: requireNativeComponent<FasterImageProps>(ComponentName),
-  android: AndroidImage as any,
+  // @ts-ignore
+  android: AndroidImage,
 });
