@@ -1,6 +1,3 @@
-import Nuke
-import NukeUI
-
 @objc(FasterImageViewManager)
 final class FasterImageViewManager: RCTViewManager {
     

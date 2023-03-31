@@ -1,5 +1,3 @@
-import Nuke
-
 /// How aggressively the cache should be used.
 enum CachePolicy: String {
     case memory, discWithCacheControl, discNoCacheControl

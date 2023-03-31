@@ -4,7 +4,7 @@ package = JSON.parse(File.read(File.join(__dir__, "package.json")))
 folly_compiler_flags = '-DFOLLY_NO_CONFIG -DFOLLY_MOBILE=1 -DFOLLY_USE_LIBCPP=1 -Wno-comma -Wno-shorten-64-to-32'
 
 Pod::Spec.new do |s|
-  s.name         = "candlefinance-faster-image"
+  s.name         = "FasterImage"
   s.version      = package["version"]
   s.summary      = package["description"]
   s.homepage     = package["homepage"]
@@ -17,8 +17,16 @@ Pod::Spec.new do |s|
   s.source_files = "ios/**/*.{h,m,mm,swift}"
 
   s.dependency "React-Core"
-  s.dependency "Nuke"
-  s.dependency "NukeUI"
+
+  s.subspec "Nuke" do |ss|
+    ss.name = "Nuke"
+    ss.source_files = "ios/Nuke/**/*.{h,m,mm,swift}"
+  end
+
+  s.subspec "NukeUI" do |ss|
+    ss.name = "NukeUI"
+    ss.source_files = "ios/NukeUI/**/*.{h,m,mm,swift}"
+  end
 
   # Don't install the dependencies when we run `pod install` in the old architecture.
   if ENV['RCT_NEW_ARCH_ENABLED'] == '1' then
