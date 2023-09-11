@@ -15,7 +15,7 @@ extension ImageRequest {
 
     /// A key for processed image data in disk cache.
     func makeDataCacheKey() -> String {
-        "\(preferredImageId)\(thubmnail?.identifier ?? "")\(ImageProcessors.Composition(processors).identifier)"
+        "\(preferredImageId)\(thumbnail?.identifier ?? "")\(ImageProcessors.Composition(processors).identifier)"
     }
 
     // MARK: - Load Keys
@@ -37,14 +37,15 @@ extension ImageRequest {
 }
 
 /// Uniquely identifies a cache processed image.
-struct CacheKey: Hashable {
+final class CacheKey: Hashable, Sendable {
+    // Using a reference type turned out to be significantly faster
     private let imageId: String?
     private let thumbnail: ImageRequest.ThumbnailOptions?
     private let processors: [any ImageProcessing]
 
     init(_ request: ImageRequest) {
         self.imageId = request.preferredImageId
-        self.thumbnail = request.thubmnail
+        self.thumbnail = request.thumbnail
         self.processors = request.processors
     }
 
@@ -60,17 +61,25 @@ struct CacheKey: Hashable {
 }
 
 /// Uniquely identifies a task of retrieving the processed image.
-struct ImageLoadKey: Hashable {
+final class ImageLoadKey: Hashable, Sendable {
     let cacheKey: CacheKey
     let options: ImageRequest.Options
-    let thumbnail: ImageRequest.ThumbnailOptions?
     let loadKey: DataLoadKey
 
     init(_ request: ImageRequest) {
         self.cacheKey = CacheKey(request)
         self.options = request.options
-        self.thumbnail = request.thubmnail
         self.loadKey = DataLoadKey(request)
+    }
+
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(cacheKey.hashValue)
+        hasher.combine(options.hashValue)
+        hasher.combine(loadKey.hashValue)
+    }
+
+    static func == (lhs: ImageLoadKey, rhs: ImageLoadKey) -> Bool {
+        lhs.cacheKey == rhs.cacheKey && lhs.options == rhs.options && lhs.loadKey == rhs.loadKey
     }
 }
 
@@ -81,7 +90,7 @@ struct DecodedImageLoadKey: Hashable {
 
     init(_ request: ImageRequest) {
         self.dataLoadKey = DataLoadKey(request)
-        self.thumbnail = request.thubmnail
+        self.thumbnail = request.thumbnail
     }
 }
 

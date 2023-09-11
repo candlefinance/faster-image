@@ -11,7 +11,7 @@ import Foundation
 /// either *cost* or *count* limit is reached. The sweeps are performed periodically.
 ///
 /// DataCache always writes and removes data asynchronously. It also allows for
-/// reading and writing data in parallel. This is implemented using a "staging"
+/// reading and writing data in parallel. It is implemented using a staging
 /// area which stores changes until they are flushed to disk:
 ///
 /// ```swift
@@ -45,28 +45,16 @@ public final class DataCache: DataCaching, @unchecked Sendable {
     /// The path for the directory managed by the cache.
     public let path: URL
 
-    /// The number of seconds between each LRU sweep. 30 by default.
-    /// The first sweep is performed right after the cache is initialized.
-    ///
-    /// Sweeps are performed in a background and can be performed in parallel
-    /// with reading.
-    public var sweepInterval: TimeInterval = 30
+    /// The time interval between cache sweeps. The default value is 1 hour.
+    public var sweepInterval: TimeInterval = 3600
 
-    /// The delay after which the initial sweep is performed. 10 by default.
-    /// The initial sweep is performed after a delay to avoid competing with
-    /// other subsystems for the resources.
-    private var initialSweepDelay: TimeInterval = 10
-
-    /// Enables compression. Disabled by default.
-    ///
-    /// Enabling compression significantly decreases disk usage allowing you
-    /// to store more images or reduce the cache size limit.
-    ///
-    /// - warning: There is a significant performance hit associated with compression.
-    ///
-    /// - note: If enabled, uses `lzfse` compression algorithm that offers
-    /// optimal performance on Apple platforms.
-    public var isCompressionEnabled = false
+    // Deprecated in Nuke 12.2
+    @available(*, deprecated, message: "It's not recommended to use compression with the popular image formats that already compress the data")
+    public var isCompressionEnabled: Bool {
+        get { _isCompressionEnabled }
+        set { _isCompressionEnabled = newValue }
+    }
+    var _isCompressionEnabled = false
 
     // Staging
 
@@ -76,6 +64,10 @@ public final class DataCache: DataCaching, @unchecked Sendable {
     private var isFlushScheduled = false
 
     var flushInterval: DispatchTimeInterval = .seconds(1)
+
+    private struct Metadata: Codable {
+        var lastSweepDate: Date?
+    }
 
     /// A queue which is used for disk I/O.
     public let queue = DispatchQueue(label: "com.github.kean.Nuke.DataCache.WriteQueue", qos: .utility)
@@ -95,6 +87,7 @@ public final class DataCache: DataCaching, @unchecked Sendable {
     /// - parameter filenameGenerator: Generates a filename for the given URL.
     /// The default implementation generates a filename using SHA1 hash function.
     public convenience init(name: String, filenameGenerator: @escaping (String) -> String? = DataCache.filename(for:)) throws {
+        // This should be replaced with URL.cachesDirectory on iOS 16, which never fails
         guard let root = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first else {
             throw NSError(domain: NSCocoaErrorDomain, code: NSFileNoSuchFileError, userInfo: nil)
         }
@@ -113,13 +106,25 @@ public final class DataCache: DataCaching, @unchecked Sendable {
     /// A `FilenameGenerator` implementation which uses SHA1 hash function to
     /// generate a filename from the given key.
     public static func filename(for key: String) -> String? {
-        key.sha1
+        key.isEmpty ? nil : key.sha1
     }
 
     private func didInit() throws {
         try FileManager.default.createDirectory(at: path, withIntermediateDirectories: true, attributes: nil)
-        queue.asyncAfter(deadline: .now() + initialSweepDelay) { [weak self] in
-            self?.performAndScheduleSweep()
+        scheduleSweep()
+    }
+
+    private func scheduleSweep() {
+        if let lastSweepDate = getMetadata().lastSweepDate,
+           Date().timeIntervalSince(lastSweepDate) < sweepInterval {
+            return // Already completed recently
+        }
+        // Add a bit of a delay to free the resources during launch
+        queue.asyncAfter(deadline: .now() + 5.0, qos: .background) { [weak self] in
+            self?.performSweep()
+            self?.updateMetadata {
+                $0.lastSweepDate = Date()
+            }
         }
     }
 
@@ -233,9 +238,7 @@ public final class DataCache: DataCaching, @unchecked Sendable {
 
     /// Returns `url` for the given cache key.
     public func url(for key: String) -> URL? {
-        guard let filename = self.filename(for: key) else {
-            return nil
-        }
+        guard let filename = self.filename(for: key) else { return nil }
         return self.path.appendingPathComponent(filename, isDirectory: false)
     }
 
@@ -251,9 +254,9 @@ public final class DataCache: DataCaching, @unchecked Sendable {
     /// operations for the given key are finished.
     public func flush(for key: String) {
         queue.sync {
-            guard let change = lock.sync({ staging.changes[key] }) else { return }
+            guard let change = lock.withLock({ staging.changes[key] }) else { return }
             perform(change)
-            lock.sync { staging.flushed(change) }
+            lock.withLock { staging.flushed(change) }
         }
     }
 
@@ -333,27 +336,20 @@ public final class DataCache: DataCaching, @unchecked Sendable {
     // MARK: Compression
 
     private func compressed(_ data: Data) throws -> Data {
-        guard isCompressionEnabled else {
+        guard _isCompressionEnabled else {
             return data
         }
         return try (data as NSData).compressed(using: .lzfse) as Data
     }
 
     private func decompressed(_ data: Data) throws -> Data {
-        guard isCompressionEnabled else {
+        guard _isCompressionEnabled else {
             return data
         }
         return try (data as NSData).decompressed(using: .lzfse) as Data
     }
 
     // MARK: Sweep
-
-    private func performAndScheduleSweep() {
-        performSweep()
-        queue.asyncAfter(deadline: .now() + sweepInterval) { [weak self] in
-            self?.performAndScheduleSweep()
-        }
-    }
 
     /// Synchronously performs a cache sweep and removes the least recently items
     /// which no longer fit in cache.
@@ -407,6 +403,27 @@ public final class DataCache: DataCaching, @unchecked Sendable {
             return Entry(url: $0, meta: meta)
         }
     }
+
+    // MARK: Metadata
+
+    private func getMetadata() -> Metadata {
+        if let data = try? Data(contentsOf: metadataFileURL),
+           let metadata = try? JSONDecoder().decode(Metadata.self, from: data) {
+            return metadata
+        }
+        return Metadata()
+    }
+
+    private func updateMetadata(_ closure: (inout Metadata) -> Void) {
+        var metadata = getMetadata()
+        closure(&metadata)
+        try? JSONEncoder().encode(metadata).write(to: metadataFileURL)
+    }
+
+    private var metadataFileURL: URL {
+        path.appendingPathComponent(".data-cache-info", isDirectory: false)
+    }
+
 
     // MARK: Inspection
 
