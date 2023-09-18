@@ -49,26 +49,28 @@ export type FasterImageProps = {
 
 const ComponentName = 'FasterImageView';
 
-const AndroidImage = (props: FasterImageProps) => {
-  return (
-    <Image
-      source={{ uri: props.url, cache: 'force-cache' }}
-      style={props.style}
-      onError={props.onError}
-      onLoad={(event) => {
-        const { width, height } = event.nativeEvent.source;
-        props.onSuccess?.({
-          nativeEvent: {
-            width,
-            height,
-            source: props.url,
-          },
-        });
-      }}
-      resizeMode={props.resizeMode}
-    />
-  );
-};
+class AndroidImage extends React.Component<FasterImageProps> {
+  render() {
+    return (
+      <Image
+        source={{ uri: this.props.url, cache: 'force-cache' }}
+        style={this.props.style}
+        onError={this.props.onError}
+        onLoad={(event) => {
+          const { width, height } = event.nativeEvent.source;
+          this.props.onSuccess?.({
+            nativeEvent: {
+              width,
+              height,
+              source: this.props.url,
+            },
+          });
+        }}
+        resizeMode={this.props.resizeMode}
+      />
+    );
+  }
+}
 
 /**
  * FasterImageView is a React Native component that renders an Image on iOS.
