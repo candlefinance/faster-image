@@ -3,7 +3,6 @@ import {
   Image,
   ImageResizeMode,
   ImageStyle,
-  Platform,
   requireNativeComponent,
 } from 'react-native';
 
@@ -49,7 +48,7 @@ export type FasterImageProps = {
 
 const ComponentName = 'FasterImageView';
 
-class AndroidImage extends React.Component<FasterImageProps> {
+export class AndroidDefaultImage extends React.Component<FasterImageProps> {
   render() {
     return (
       <Image
@@ -90,8 +89,5 @@ class AndroidImage extends React.Component<FasterImageProps> {
  *    blurhash="URCP@fof00WBWBa|ofj[00WB~qt7xufQRjay"
  * />
  * */
-export const FasterImageView = Platform.select({
-  ios: requireNativeComponent<FasterImageProps>(ComponentName),
-  // @ts-ignore
-  android: AndroidImage,
-});
+export const FasterImageView =
+  requireNativeComponent<FasterImageProps>(ComponentName);

@@ -5,13 +5,12 @@ import { FasterImageView } from '@candlefinance/faster-image';
 import { Dimensions, FlatList, SafeAreaView, StyleSheet } from 'react-native';
 
 const size = Dimensions.get('window').width / 3;
+const imageURLs = Array.from(
+  { length: 100 },
+  (_, i) => `https://cataas.com/cat?width=200&height=200&${i}`
+);
 
 export default function App() {
-  const imageURLs = Array.from(
-    { length: 1000 },
-    (_, i) => `https://picsum.photos/seed/${i}/1000/1000`
-  );
-
   return (
     <SafeAreaView style={styles.container}>
       <FlatList
