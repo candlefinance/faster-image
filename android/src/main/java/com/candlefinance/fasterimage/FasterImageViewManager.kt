@@ -22,17 +22,15 @@ class FasterImageViewManager : SimpleViewManager<AppCompatImageView>() {
     return AppCompatImageView(reactContext)
   }
 
-   @ReactProp(name = "options")
+   @ReactProp(name = "source")
     fun setImageSource(view: AppCompatImageView, options: ReadableMap) {
       val url = options.getString("url")
       val base64Placeholder = options.getString("base64Placeholder")
       val thumbHash = options.getString("thumbhash")
       val resizeMode = options.getString("resizeMode")
-      val showActivityIndicator = options.getBoolean("showActivityIndicator")
       val transitionDuration = options.getDouble("transitionDuration")
       val cachePolicy = options.getString("cachePolicy")
       val failureImage = options.getString("failureImage")
-      val progressiveLoadingEnabled = options.getBoolean("progressiveLoadingEnabled")
 
       var drawablePlaceholder: Drawable? = null
       if (base64Placeholder != null) {
