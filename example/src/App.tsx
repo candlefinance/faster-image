@@ -6,7 +6,7 @@ import { Dimensions, FlatList, SafeAreaView, StyleSheet } from 'react-native';
 
 const size = Dimensions.get('window').width / 3;
 const imageURLs = Array.from(
-  { length: 10 },
+  { length: 1000 },
   (_, i) => `https://picsum.photos/200/200?random=${i}`
 );
 

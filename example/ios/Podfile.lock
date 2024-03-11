@@ -1,13 +1,13 @@
 PODS:
   - boost (1.76.0)
   - DoubleConversion (1.1.6)
-  - FasterImage (1.2.0):
-    - FasterImage/Nuke (= 1.2.0)
-    - FasterImage/NukeUI (= 1.2.0)
+  - FasterImage (1.3.0):
+    - FasterImage/Nuke (= 1.3.0)
+    - FasterImage/NukeUI (= 1.3.0)
     - React-Core
-  - FasterImage/Nuke (1.2.0):
+  - FasterImage/Nuke (1.3.0):
     - React-Core
-  - FasterImage/NukeUI (1.2.0):
+  - FasterImage/NukeUI (1.3.0):
     - React-Core
   - FBLazyVector (0.71.4)
   - FBReactNativeSpec (0.71.4):
@@ -463,7 +463,7 @@ EXTERNAL SOURCES:
 SPEC CHECKSUMS:
   boost: 57d2868c099736d80fcd648bf211b4431e51a558
   DoubleConversion: 5189b271737e1565bdce30deb4a08d647e3f5f54
-  FasterImage: 5f5a144d7cb100cb75c3be12ffb3cec1e9d29c9b
+  FasterImage: a89a05162ea08303cfabc5e18c4e34ab1afeadc9
   FBLazyVector: 446e84642979fff0ba57f3c804c2228a473aeac2
   FBReactNativeSpec: 241709e132e3bf1526c1c4f00bc5384dd39dfba9
   fmt: ff9d55029c625d3757ed641535fd4a75fedc7ce9
