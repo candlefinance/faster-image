@@ -1,10 +1,20 @@
-import React from 'react';
 import {
-  Image,
   ImageResizeMode,
   ImageStyle,
   requireNativeComponent,
 } from 'react-native';
+
+type ImageOptions = {
+  blurhash?: string;
+  thumbhash?: string;
+  resizeMode?: ImageResizeMode;
+  showActivityIndicator?: boolean;
+  transitionDuration?: number;
+  cachePolicy?: 'memory' | 'discWithCacheControl' | 'discNoCacheControl';
+  failureImage?: string;
+  progressiveLoadingEnabled?: boolean;
+  url: string;
+};
 
 /**
  * FasterImageProps
@@ -26,16 +36,7 @@ import {
  * */
 export type FasterImageProps = {
   style: ImageStyle;
-  blurhash?: string;
-  thumbhash?: string;
-  resizeMode?: ImageResizeMode;
-  showActivityIndicator?: boolean;
-  transitionDuration?: number;
-  cachePolicy?: 'memory' | 'discWithCacheControl' | 'discNoCacheControl';
-  rounded?: boolean;
-  failureImage?: string;
-  progressiveLoadingEnabled?: boolean;
-  url: string;
+  source: ImageOptions;
   onError?: (result: { nativeEvent: { error: string } }) => void;
   onSuccess?: (result: {
     nativeEvent: {
@@ -47,29 +48,6 @@ export type FasterImageProps = {
 };
 
 const ComponentName = 'FasterImageView';
-
-export class AndroidDefaultImage extends React.Component<FasterImageProps> {
-  render() {
-    return (
-      <Image
-        source={{ uri: this.props.url, cache: 'force-cache' }}
-        style={this.props.style}
-        onError={this.props.onError}
-        onLoad={(event) => {
-          const { width, height } = event.nativeEvent.source;
-          this.props.onSuccess?.({
-            nativeEvent: {
-              width,
-              height,
-              source: this.props.url,
-            },
-          });
-        }}
-        resizeMode={this.props.resizeMode}
-      />
-    );
-  }
-}
 
 /**
  * FasterImageView is a React Native component that renders an Image on iOS.

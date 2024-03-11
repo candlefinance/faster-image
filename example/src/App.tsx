@@ -6,8 +6,8 @@ import { Dimensions, FlatList, SafeAreaView, StyleSheet } from 'react-native';
 
 const size = Dimensions.get('window').width / 3;
 const imageURLs = Array.from(
-  { length: 100 },
-  (_, i) => `https://cataas.com/cat?width=200&height=200&${i}`
+  { length: 10 },
+  (_, i) => `https://picsum.photos/200/200?random=${i}`
 );
 
 export default function App() {
@@ -27,12 +27,14 @@ export default function App() {
           <FasterImageView
             onError={(event) => console.warn(event.nativeEvent.error)}
             style={styles.image}
-            rounded
-            transitionDuration={0.3}
-            cachePolicy="memory"
-            thumbhash="k0oGLQaSVsJ0BVhn2oq2Z5SQUQcZ"
-            failureImage="k0oGLQaSVsJ0BVhn2oq2Z5SQUQcZ"
-            url={item}
+            // rounded
+            source={{
+              transitionDuration: 0.3,
+              cachePolicy: 'discWithCacheControl',
+              showActivityIndicator: true,
+              failureImage: 'k0oGLQaSVsJ0BVhn2oq2Z5SQUQcZ',
+              url: item,
+            }}
           />
         )}
       />
@@ -45,6 +47,7 @@ const styles = StyleSheet.create({
   image: {
     width: size,
     height: size,
+    borderRadius: size / 2,
   },
   container: {
     flex: 1,

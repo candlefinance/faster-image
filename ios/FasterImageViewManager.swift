@@ -6,8 +6,22 @@ final class FasterImageViewManager: RCTViewManager {
     }
     
     @objc override static func requiresMainQueueSetup() -> Bool {
-        return false
+        return true
     }
+}
+
+
+struct ImageOptions: Decodable {
+    let blurhash: String?
+    let thumbhash: String?
+    let resizeMode: String?
+    let showActivityIndicator: Bool?
+    let transitionDuration: Double?
+    let cachePolicy: String?
+    let failureImage: String?
+    let base64Placeholder: String?
+    let progressiveLoadingEnabled: Bool?
+    let url: String
 }
 
 /// A wrapper around `LazyImageView` to make it compatible with React Native.
@@ -25,7 +39,9 @@ final class FasterImageView: UIView {
             lazyImageView.leadingAnchor.constraint(equalTo: leadingAnchor),
             lazyImageView.trailingAnchor.constraint(equalTo: trailingAnchor),
         ])
-        lazyImageView.priority = .normal
+        lazyImageView.pipeline = .shared
+        lazyImageView.priority = .high
+        self.clipsToBounds = true
         lazyImageView.onCompletion = { [weak self] result in
             self?.completionHandler(with: result)
         }
@@ -45,51 +61,77 @@ final class FasterImageView: UIView {
     @objc var onSuccess: RCTDirectEventBlock?
     
     // MARK: - Properties
+    @objc var source: NSDictionary? = nil {
+        didSet {
+            guard let source = source else {
+                onError?([  
+                    "error": "Expected a valid source but got: \("nil")",
+                ])
+                return
+            }
+            do {
+                let options = try DictionaryDecoder().decode(ImageOptions.self, from: source)
+                if let base64Placeholder = options.base64Placeholder {
+                    self.base64Placeholder = base64Placeholder
+                }
+                if let blurhash = options.blurhash {
+                    self.blurhash = blurhash
+                }
+                if let thumbhash = options.thumbhash {
+                    self.thumbhash = thumbhash
+                }
+                resizeMode = options.resizeMode ?? "contain"
+                if let showActivityIndicator = options.showActivityIndicator {
+                    self.showActivityIndicator = showActivityIndicator
+                }
+                transitionDuration = NSNumber(value: options.transitionDuration ?? 0.5)
+                cachePolicy = options.cachePolicy ?? "memory"
+                if let failureImage = options.failureImage {
+                    self.failureImage = failureImage
+                }
+                progressiveLoadingEnabled = options.progressiveLoadingEnabled ?? false
+                url = options.url
+            } catch {
+                onError?([
+                    "error": error.localizedDescription,
+                ])
+            }
+        }
+    }
     
-    @objc var showActivityIndicator = false {
+    var showActivityIndicator = false {
         didSet {
             lazyImageView.placeholderView = UIActivityIndicatorView()
         }
     }
     
-    @objc var resizeMode = "contain" {
+    var resizeMode = "contain" {
         didSet {
             lazyImageView.contentMode = ResizeMode(rawValue: resizeMode)?.contentMode ?? .scaleAspectFit
         }
     }
     
-    @objc var transitionDuration: NSNumber = 0.5 {
+    var transitionDuration: NSNumber = 0.5 {
         didSet {
             lazyImageView.transition = .fadeIn(duration: transitionDuration.doubleValue)
         }
     }
     
-    @objc var progressiveLoadingEnabled = false {
+    var progressiveLoadingEnabled = false {
         didSet {
             lazyImageView.isProgressiveImageRenderingEnabled = progressiveLoadingEnabled
         }
     }
     
-    @objc var cachePolicy = "memory" {
+    var cachePolicy = "memory" {
         didSet {
             lazyImageView.pipeline = CachePolicy(rawValue: cachePolicy)?.pipeline ?? .shared
         }
     }
     
-    @objc var rounded: Bool = false {
-        didSet {
-            guard rounded else {
-                return
-            }
-            lazyImageView.processors = [
-                ImageProcessors.Circle()
-            ]
-        }
-    }
-    
     // MARK: - Optional Properties
     
-    @objc var base64Placeholder: String? {
+    var base64Placeholder: String? {
         didSet {
             guard let base64Placeholder else {
                 return
@@ -99,12 +141,6 @@ final class FasterImageView: UIView {
                 guard var image = UIImage(base64Placeholder: base64Placeholder) else {
                     return
                 }
-                if self.rounded {
-                    let processor = ImageProcessors.Circle()
-                    if let newImage = processor.process(image) {
-                        image = newImage
-                    }
-                }
                 DispatchQueue.main.async { [weak self] in
                     self?.lazyImageView.placeholderImage = image
                 }
@@ -112,7 +148,7 @@ final class FasterImageView: UIView {
         }
     }
     
-    @objc var blurhash: String? {
+    var blurhash: String? {
         didSet {
             guard let blurhash else {
                 return
@@ -125,12 +161,6 @@ final class FasterImageView: UIView {
                 ) else {
                     return
                 }
-                if self.rounded {
-                    let processor = ImageProcessors.Circle()
-                    if let newImage = processor.process(image) {
-                        image = newImage
-                    }
-                }
                 DispatchQueue.main.async { [weak self] in
                     self?.lazyImageView.placeholderImage = image
                 }
@@ -138,7 +168,7 @@ final class FasterImageView: UIView {
         }
     }
     
-    @objc var failureImage: String? {
+    var failureImage: String? {
         didSet {
             guard let failureImage else {
                 return
@@ -152,12 +182,6 @@ final class FasterImageView: UIView {
                         ?? UIImage(base64Hash: failureImage) else {
                     return
                 }
-                if self.rounded {
-                    let processor = ImageProcessors.Circle()
-                    if let newImage = processor.process(image) {
-                        image = newImage
-                    }
-                }
                 DispatchQueue.main.async { [weak self] in
                     self?.lazyImageView.failureImage = image
                 }
@@ -165,7 +189,7 @@ final class FasterImageView: UIView {
         }
     }
     
-    @objc var thumbhash: String? {
+    var thumbhash: String? {
         didSet {
             guard let thumbhash else {
                 return
@@ -175,12 +199,6 @@ final class FasterImageView: UIView {
                 guard var image = UIImage(base64Hash: thumbhash) else {
                     return
                 }
-                if self.rounded {
-                    let processor = ImageProcessors.Circle()
-                    if let newImage = processor.process(image) {
-                        image = newImage
-                    }
-                }
                 DispatchQueue.main.async { [weak self] in
                     self?.lazyImageView.placeholderImage = image
                 }
@@ -188,7 +206,7 @@ final class FasterImageView: UIView {
         }
     }
     
-    @objc var url: String? = nil {
+    var url: String? = nil {
         didSet {
             guard let url else {
                 onError?([
