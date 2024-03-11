@@ -1,13 +1,15 @@
 package com.candlefinance.fasterimage
 
+import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 import android.util.Base64
 import androidx.appcompat.widget.AppCompatImageView
 import coil.load
+import coil.request.CachePolicy
 import coil.size.Scale
-import coil.transform.CircleCropTransformation
+import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.uimanager.SimpleViewManager
 import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.uimanager.annotations.ReactProp
@@ -20,20 +22,412 @@ class FasterImageViewManager : SimpleViewManager<AppCompatImageView>() {
     return AppCompatImageView(reactContext)
   }
 
-  private val placeholder =
-    "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"
+   @ReactProp(name = "options")
+    fun setImageSource(view: AppCompatImageView, options: ReadableMap) {
+      val url = options.getString("url")
+      val base64Placeholder = options.getString("base64Placeholder")
+      val thumbHash = options.getString("thumbhash")
+      val resizeMode = options.getString("resizeMode")
+      val showActivityIndicator = options.getBoolean("showActivityIndicator")
+      val transitionDuration = options.getDouble("transitionDuration")
+      val cachePolicy = options.getString("cachePolicy")
+      val failureImage = options.getString("failureImage")
+      val progressiveLoadingEnabled = options.getBoolean("progressiveLoadingEnabled")
 
-  @ReactProp(name = "url")
-  fun setImageSource(view: AppCompatImageView, url: String) {
-    val decodedString: ByteArray = Base64.decode(placeholder, Base64.DEFAULT)
-    val decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.size)
-    val d: Drawable = BitmapDrawable(view.context.resources, decodedByte)
-    view.load(url) {
-      error(d)
-      crossfade(true)
-      transformations(CircleCropTransformation())
-      scale(Scale.FIT)
-      crossfade(100)
+      var drawablePlaceholder: Drawable? = null
+      if (base64Placeholder != null) {
+        drawablePlaceholder = getDrawableFromBase64(base64Placeholder, view)
+      }
+
+      var failureDrawable: Drawable? = null
+      if (failureImage != null) {
+        failureDrawable = getDrawableFromBase64(failureImage, view)
+      }
+
+      view.load(url) {
+        crossfade(transitionDuration != 0.0)
+        crossfade(transitionDuration.toInt() ?: 100)
+        placeholder(drawablePlaceholder)
+        placeholder(thumbHash?.let { makeThumbHash(view, it) })
+        error(failureDrawable)
+        scale(getResizeMode(resizeMode))
+        cachePolicy.let {
+          when (it) {
+            "discNoCacheControl" -> {
+              memoryCachePolicy(CachePolicy.DISABLED)
+              diskCachePolicy(CachePolicy.ENABLED)
+            }
+            "discWithCacheControl" -> {
+              memoryCachePolicy(CachePolicy.ENABLED)
+              diskCachePolicy(CachePolicy.ENABLED)
+            }
+            else -> {
+              memoryCachePolicy(CachePolicy.ENABLED)
+              diskCachePolicy(CachePolicy.DISABLED)
+            }
+          }
+        }
+      }
+    }
+
+    private fun getDrawableFromBase64(base64: String, view: AppCompatImageView): Drawable {
+      val decodedString: ByteArray = Base64.decode(base64, Base64.DEFAULT)
+      val decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.size)
+      return BitmapDrawable(view.context.resources, decodedByte)
+    }
+
+    private fun getResizeMode(resizeMode: String?): Scale {
+      return when (resizeMode) {
+        "cover" -> Scale.FILL
+        "contain" -> Scale.FIT
+        else -> Scale.FIT
+      }
+    }
+
+    private fun makeThumbHash(view: AppCompatImageView, hash: String): Drawable {
+      val thumbHash = ThumbHash.thumbHashToRGBA(Base64.decode(hash, Base64.DEFAULT))
+      val bitmap = Bitmap.createBitmap(thumbHash.width, thumbHash.height, Bitmap.Config.ARGB_8888)
+      bitmap.setPixels(toIntArray(thumbHash.rgba), 0, thumbHash.width, 0, 0, thumbHash.width, thumbHash.height)
+      return BitmapDrawable(view.context.resources, bitmap)
+    }
+
+    private fun toIntArray(byteArray: ByteArray): IntArray {
+      val intArray = IntArray(byteArray.size)
+      for (i in byteArray.indices) {
+        intArray[i] = byteArray[i].toInt() and 0xFF
+      }
+      return intArray
+    }
+}
+
+object ThumbHash {
+  /**
+   * Encodes an RGBA image to a ThumbHash. RGB should not be premultiplied by A.
+   *
+   * @param w    The width of the input image. Must be ≤100px.
+   * @param h    The height of the input image. Must be ≤100px.
+   * @param rgba The pixels in the input image, row-by-row. Must have w*h*4 elements.
+   * @return The ThumbHash as a byte array.
+   */
+  fun rgbaToThumbHash(w: Int, h: Int, rgba: ByteArray): ByteArray {
+    // Encoding an image larger than 100x100 is slow with no benefit
+    require(!(w > 100 || h > 100)) { w.toString() + "x" + h + " doesn't fit in 100x100" }
+
+    // Determine the average color
+    var avg_r = 0f
+    var avg_g = 0f
+    var avg_b = 0f
+    var avg_a = 0f
+    run {
+      var i = 0
+      var j = 0
+      while (i < w * h) {
+        val alpha = (rgba[j + 3].toInt() and 255) / 255.0f
+        avg_r += alpha / 255.0f * (rgba[j].toInt() and 255)
+        avg_g += alpha / 255.0f * (rgba[j + 1].toInt() and 255)
+        avg_b += alpha / 255.0f * (rgba[j + 2].toInt() and 255)
+        avg_a += alpha
+        i++
+        j += 4
+      }
+    }
+    if (avg_a > 0) {
+      avg_r /= avg_a
+      avg_g /= avg_a
+      avg_b /= avg_a
+    }
+    val hasAlpha = avg_a < w * h
+    val l_limit = if (hasAlpha) 5 else 7 // Use fewer luminance bits if there's alpha
+    val lx = Math.max(1, Math.round((l_limit * w).toFloat() / Math.max(w, h).toFloat()))
+    val ly = Math.max(1, Math.round((l_limit * h).toFloat() / Math.max(w, h).toFloat()))
+    val l = FloatArray(w * h) // luminance
+    val p = FloatArray(w * h) // yellow - blue
+    val q = FloatArray(w * h) // red - green
+    val a = FloatArray(w * h) // alpha
+
+    // Convert the image from RGBA to LPQA (composite atop the average color)
+    var i = 0
+    var j = 0
+    while (i < w * h) {
+      val alpha = (rgba[j + 3].toInt() and 255) / 255.0f
+      val r = avg_r * (1.0f - alpha) + alpha / 255.0f * (rgba[j].toInt() and 255)
+      val g = avg_g * (1.0f - alpha) + alpha / 255.0f * (rgba[j + 1].toInt() and 255)
+      val b = avg_b * (1.0f - alpha) + alpha / 255.0f * (rgba[j + 2].toInt() and 255)
+      l[i] = (r + g + b) / 3.0f
+      p[i] = (r + g) / 2.0f - b
+      q[i] = r - g
+      a[i] = alpha
+      i++
+      j += 4
+    }
+
+    // Encode using the DCT into DC (constant) and normalized AC (varying) terms
+    val l_channel = Channel(Math.max(3, lx), Math.max(3, ly)).encode(w, h, l)
+    val p_channel = Channel(3, 3).encode(w, h, p)
+    val q_channel = Channel(3, 3).encode(w, h, q)
+    val a_channel = if (hasAlpha) Channel(5, 5).encode(w, h, a) else null
+
+    // Write the constants
+    val isLandscape = w > h
+    val header24 = (Math.round(63.0f * l_channel.dc)
+      or (Math.round(31.5f + 31.5f * p_channel.dc) shl 6)
+      or (Math.round(31.5f + 31.5f * q_channel.dc) shl 12)
+      or (Math.round(31.0f * l_channel.scale) shl 18)
+      or if (hasAlpha) 1 shl 23 else 0)
+    val header16 = ((if (isLandscape) ly else lx)
+      or (Math.round(63.0f * p_channel.scale) shl 3)
+      or (Math.round(63.0f * q_channel.scale) shl 9)
+      or if (isLandscape) 1 shl 15 else 0)
+    val ac_start = if (hasAlpha) 6 else 5
+    val ac_count = (l_channel.ac.size + p_channel.ac.size + q_channel.ac.size
+      + if (hasAlpha) a_channel!!.ac.size else 0)
+    val hash = ByteArray(ac_start + (ac_count + 1) / 2)
+    hash[0] = header24.toByte()
+    hash[1] = (header24 shr 8).toByte()
+    hash[2] = (header24 shr 16).toByte()
+    hash[3] = header16.toByte()
+    hash[4] = (header16 shr 8).toByte()
+    if (hasAlpha) hash[5] = (Math.round(15.0f * a_channel!!.dc)
+      or (Math.round(15.0f * a_channel.scale) shl 4)).toByte()
+
+    // Write the varying factors
+    var ac_index = 0
+    ac_index = l_channel.writeTo(hash, ac_start, ac_index)
+    ac_index = p_channel.writeTo(hash, ac_start, ac_index)
+    ac_index = q_channel.writeTo(hash, ac_start, ac_index)
+    if (hasAlpha) a_channel!!.writeTo(hash, ac_start, ac_index)
+    return hash
+  }
+
+  /**
+   * Decodes a ThumbHash to an RGBA image. RGB is not be premultiplied by A.
+   *
+   * @param hash The bytes of the ThumbHash.
+   * @return The width, height, and pixels of the rendered placeholder image.
+   */
+  fun thumbHashToRGBA(hash: ByteArray): Image {
+    // Read the constants
+    val header24 = hash[0].toInt() and 255 or (hash[1].toInt() and 255 shl 8) or (hash[2].toInt() and 255 shl 16)
+    val header16 = hash[3].toInt() and 255 or (hash[4].toInt() and 255 shl 8)
+    val l_dc = (header24 and 63).toFloat() / 63.0f
+    val p_dc = (header24 shr 6 and 63).toFloat() / 31.5f - 1.0f
+    val q_dc = (header24 shr 12 and 63).toFloat() / 31.5f - 1.0f
+    val l_scale = (header24 shr 18 and 31).toFloat() / 31.0f
+    val hasAlpha = header24 shr 23 != 0
+    val p_scale = (header16 shr 3 and 63).toFloat() / 63.0f
+    val q_scale = (header16 shr 9 and 63).toFloat() / 63.0f
+    val isLandscape = header16 shr 15 != 0
+    val lx = Math.max(3, if (isLandscape) if (hasAlpha) 5 else 7 else header16 and 7)
+    val ly = Math.max(3, if (isLandscape) header16 and 7 else if (hasAlpha) 5 else 7)
+    val a_dc = if (hasAlpha) (hash[5].toInt() and 15).toFloat() / 15.0f else 1.0f
+    val a_scale = (hash[5].toInt() shr 4 and 15).toFloat() / 15.0f
+
+    // Read the varying factors (boost saturation by 1.25x to compensate for quantization)
+    val ac_start = if (hasAlpha) 6 else 5
+    var ac_index = 0
+    val l_channel = Channel(lx, ly)
+    val p_channel = Channel(3, 3)
+    val q_channel = Channel(3, 3)
+    var a_channel: Channel? = null
+    ac_index = l_channel.decode(hash, ac_start, ac_index, l_scale)
+    ac_index = p_channel.decode(hash, ac_start, ac_index, p_scale * 1.25f)
+    ac_index = q_channel.decode(hash, ac_start, ac_index, q_scale * 1.25f)
+    if (hasAlpha) {
+      a_channel = Channel(5, 5)
+      a_channel.decode(hash, ac_start, ac_index, a_scale)
+    }
+    val l_ac = l_channel.ac
+    val p_ac = p_channel.ac
+    val q_ac = q_channel.ac
+    val a_ac = if (hasAlpha) a_channel!!.ac else null
+
+    // Decode using the DCT into RGB
+    val ratio = thumbHashToApproximateAspectRatio(hash)
+    val w = Math.round(if (ratio > 1.0f) 32.0f else 32.0f * ratio)
+    val h = Math.round(if (ratio > 1.0f) 32.0f / ratio else 32.0f)
+    val rgba = ByteArray(w * h * 4)
+    val cx_stop = Math.max(lx, if (hasAlpha) 5 else 3)
+    val cy_stop = Math.max(ly, if (hasAlpha) 5 else 3)
+    val fx = FloatArray(cx_stop)
+    val fy = FloatArray(cy_stop)
+    var y = 0
+    var i = 0
+    while (y < h) {
+      var x = 0
+      while (x < w) {
+        var l = l_dc
+        var p = p_dc
+        var q = q_dc
+        var a = a_dc
+
+        // Precompute the coefficients
+        for (cx in 0 until cx_stop) fx[cx] = Math.cos(Math.PI / w * (x + 0.5f) * cx).toFloat()
+        for (cy in 0 until cy_stop) fy[cy] = Math.cos(Math.PI / h * (y + 0.5f) * cy).toFloat()
+
+        // Decode L
+        run {
+          var cy = 0
+          var j = 0
+          while (cy < ly) {
+            val fy2 = fy[cy] * 2.0f
+            var cx = if (cy > 0) 0 else 1
+            while (cx * ly < lx * (ly - cy)) {
+              l += l_ac[j] * fx[cx] * fy2
+              cx++
+              j++
+            }
+            cy++
+          }
+        }
+
+        // Decode P and Q
+        var cy = 0
+        var j = 0
+        while (cy < 3) {
+          val fy2 = fy[cy] * 2.0f
+          var cx = if (cy > 0) 0 else 1
+          while (cx < 3 - cy) {
+            val f = fx[cx] * fy2
+            p += p_ac[j] * f
+            q += q_ac[j] * f
+            cx++
+            j++
+          }
+          cy++
+        }
+
+        // Decode A
+        if (hasAlpha) {
+          var cy = 0
+          var j = 0
+          while (cy < 5) {
+            val fy2 = fy[cy] * 2.0f
+            var cx = if (cy > 0) 0 else 1
+            while (cx < 5 - cy) {
+              a += a_ac!![j] * fx[cx] * fy2
+              cx++
+              j++
+            }
+            cy++
+          }
+        }
+
+        // Convert to RGB
+        val b = l - 2.0f / 3.0f * p
+        val r = (3.0f * l - b + q) / 2.0f
+        val g = r - q
+        rgba[i] = Math.max(0, Math.round(255.0f * Math.min(1f, r))).toByte()
+        rgba[i + 1] = Math.max(0, Math.round(255.0f * Math.min(1f, g))).toByte()
+        rgba[i + 2] = Math.max(0, Math.round(255.0f * Math.min(1f, b))).toByte()
+        rgba[i + 3] = Math.max(0, Math.round(255.0f * Math.min(1f, a))).toByte()
+        x++
+        i += 4
+      }
+      y++
+    }
+    return Image(w, h, rgba)
+  }
+
+  /**
+   * Extracts the average color from a ThumbHash. RGB is not be premultiplied by A.
+   *
+   * @param hash The bytes of the ThumbHash.
+   * @return The RGBA values for the average color. Each value ranges from 0 to 1.
+   */
+  fun thumbHashToAverageRGBA(hash: ByteArray): RGBA {
+    val header = hash[0].toInt() and 255 or (hash[1].toInt() and 255 shl 8) or (hash[2].toInt() and 255 shl 16)
+    val l = (header and 63).toFloat() / 63.0f
+    val p = (header shr 6 and 63).toFloat() / 31.5f - 1.0f
+    val q = (header shr 12 and 63).toFloat() / 31.5f - 1.0f
+    val hasAlpha = header shr 23 != 0
+    val a = if (hasAlpha) (hash[5].toInt() and 15).toFloat() / 15.0f else 1.0f
+    val b = l - 2.0f / 3.0f * p
+    val r = (3.0f * l - b + q) / 2.0f
+    val g = r - q
+    return RGBA(
+      Math.max(0f, Math.min(1f, r)),
+      Math.max(0f, Math.min(1f, g)),
+      Math.max(0f, Math.min(1f, b)),
+      a)
+  }
+
+  /**
+   * Extracts the approximate aspect ratio of the original image.
+   *
+   * @param hash The bytes of the ThumbHash.
+   * @return The approximate aspect ratio (i.e. width / height).
+   */
+  fun thumbHashToApproximateAspectRatio(hash: ByteArray): Float {
+    val header = hash[3]
+    val hasAlpha = hash[2].toInt() and 0x80 != 0
+    val isLandscape = hash[4].toInt() and 0x80 != 0
+    val lx = if (isLandscape) if (hasAlpha) 5 else 7 else header.toInt() and 7
+    val ly = if (isLandscape) header.toInt() and 7 else if (hasAlpha) 5 else 7
+    return lx.toFloat() / ly.toFloat()
+  }
+
+  class Image(var width: Int, var height: Int, var rgba: ByteArray)
+  class RGBA(var r: Float, var g: Float, var b: Float, var a: Float)
+  private class Channel internal constructor(var nx: Int, var ny: Int) {
+    var dc = 0f
+    var ac: FloatArray
+    var scale = 0f
+
+    init {
+      var n = 0
+      for (cy in 0 until ny) {
+        var cx = if (cy > 0) 0 else 1
+        while (cx * ny < nx * (ny - cy)) {
+          n++
+          cx++
+        }
+      }
+      ac = FloatArray(n)
+    }
+
+    fun encode(w: Int, h: Int, channel: FloatArray): Channel {
+      var n = 0
+      val fx = FloatArray(w)
+      for (cy in 0 until ny) {
+        var cx = 0
+        while (cx * ny < nx * (ny - cy)) {
+          var f = 0f
+          for (x in 0 until w) fx[x] = Math.cos(Math.PI / w * cx * (x + 0.5f)).toFloat()
+          for (y in 0 until h) {
+            val fy = Math.cos(Math.PI / h * cy * (y + 0.5f)).toFloat()
+            for (x in 0 until w) f += channel[x + y * w] * fx[x] * fy
+          }
+          f /= (w * h).toFloat()
+          if (cx > 0 || cy > 0) {
+            ac[n++] = f
+            scale = Math.max(scale, Math.abs(f))
+          } else {
+            dc = f
+          }
+          cx++
+        }
+      }
+      if (scale > 0) for (i in ac.indices) ac[i] = 0.5f + 0.5f / scale * ac[i]
+      return this
+    }
+
+    fun decode(hash: ByteArray, start: Int, index: Int, scale: Float): Int {
+      var index = index
+      for (i in ac.indices) {
+        val data = hash[start + (index shr 1)].toInt() shr (index and 1 shl 2)
+        ac[i] = ((data and 15).toFloat() / 7.5f - 1.0f) * scale
+        index++
+      }
+      return index
+    }
+
+    fun writeTo(hash: ByteArray, start: Int, index: Int): Int {
+      var index = index
+      for (v in ac) {
+        hash[start + (index shr 1)] = (hash[start + (index shr 1)].toInt() or (Math.round(15.0f * v) shl (index and 1 shl 2))).toByte()
+        index++
+      }
+      return index
     }
   }
 }
