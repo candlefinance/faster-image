@@ -2,17 +2,24 @@ package com.candlefinance.fasterimage
 
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Outline
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 import android.util.Base64
+import android.view.View
+import android.view.ViewOutlineProvider
 import androidx.appcompat.widget.AppCompatImageView
-import coil.load
+import coil.imageLoader
 import coil.request.CachePolicy
+import coil.request.ImageRequest
 import coil.size.Scale
+import com.facebook.react.bridge.Arguments
+import com.facebook.react.bridge.ReactContext
 import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.uimanager.SimpleViewManager
 import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.uimanager.annotations.ReactProp
+import com.facebook.react.uimanager.events.RCTEventEmitter
 
 
 class FasterImageViewManager : SimpleViewManager<AppCompatImageView>() {
@@ -22,6 +29,21 @@ class FasterImageViewManager : SimpleViewManager<AppCompatImageView>() {
     return AppCompatImageView(reactContext)
   }
 
+  override fun getExportedCustomBubblingEventTypeConstants(): Map<String, Any> {
+    return mapOf(
+      "onError" to mapOf(
+        "phasedRegistrationNames" to mapOf(
+          "bubbled" to "onError"
+        )
+      ),
+      "onSuccess" to mapOf(
+        "phasedRegistrationNames" to mapOf(
+          "bubbled" to "onSuccess"
+        )
+      )
+    )
+  }
+
    @ReactProp(name = "source")
     fun setImageSource(view: AppCompatImageView, options: ReadableMap) {
       val url = options.getString("url")
@@ -29,8 +51,13 @@ class FasterImageViewManager : SimpleViewManager<AppCompatImageView>() {
       val thumbHash = options.getString("thumbhash")
       val resizeMode = options.getString("resizeMode")
       val transitionDuration = options.getDouble("transitionDuration")
+      val borderRadius = if (options.hasKey("borderRadius")) options.getDouble("borderRadius") else 0.0
       val cachePolicy = options.getString("cachePolicy")
       val failureImage = options.getString("failureImage")
+
+      if (borderRadius != 0.0) {
+        setViewBorderRadius(view, borderRadius.toInt())
+      }
 
       var drawablePlaceholder: Drawable? = null
       if (base64Placeholder != null) {
@@ -41,29 +68,51 @@ class FasterImageViewManager : SimpleViewManager<AppCompatImageView>() {
       if (failureImage != null) {
         failureDrawable = getDrawableFromBase64(failureImage, view)
       }
-
-      view.load(url) {
-        crossfade(transitionDuration != 0.0)
-        crossfade(transitionDuration.toInt() ?: 100)
-        placeholder(drawablePlaceholder)
-        placeholder(thumbHash?.let { makeThumbHash(view, it) })
-        error(failureDrawable)
-        scale(getResizeMode(resizeMode))
-        cachePolicy.let {
-          when (it) {
-            "discNoCacheControl" -> {
-              memoryCachePolicy(CachePolicy.DISABLED)
-              diskCachePolicy(CachePolicy.ENABLED)
-            }
-            "discWithCacheControl" -> {
-              memoryCachePolicy(CachePolicy.ENABLED)
-              diskCachePolicy(CachePolicy.ENABLED)
-            }
-            else -> {
-              memoryCachePolicy(CachePolicy.ENABLED)
-              diskCachePolicy(CachePolicy.DISABLED)
-            }
+     val imageLoader = view.context.imageLoader
+     val request = ImageRequest.Builder(view.context)
+        .data(url)
+        .target(
+          onStart = { placeholder ->
+            view.setImageDrawable(placeholder)
+          },
+          onSuccess = { result ->
+            val event = Arguments.createMap()
+            event.putString("source", url)
+            event.putString("height", view.height.toString())
+            event.putString("width", view.width.toString())
+            val reactContext = view.context as ReactContext
+            reactContext
+              .getJSModule(RCTEventEmitter::class.java)
+              .receiveEvent(view.id, "onSuccess", event)
+            view.setImageDrawable(result)
+          },
+          onError = { error ->
+              val event = Arguments.createMap()
+              event.putString("error", "failed to load image")
+              val reactContext = view.context as ReactContext
+              reactContext
+                .getJSModule(RCTEventEmitter::class.java)
+                .receiveEvent(view.id, "onError", event)
+              view.setImageDrawable(failureDrawable)
           }
+        )
+        .crossfade(transitionDuration.toInt() ?: 100)
+        .placeholder(drawablePlaceholder)
+        .placeholder(thumbHash?.let { makeThumbHash(view, it) })
+        .error(failureDrawable)
+        .fallback(failureDrawable)
+        .scale(getResizeMode(resizeMode))
+        .memoryCachePolicy(if (cachePolicy == "memory") CachePolicy.ENABLED else CachePolicy.DISABLED)
+        .diskCachePolicy(if (cachePolicy == "discWithCacheControl" || cachePolicy == "discNoCacheControl") CachePolicy.ENABLED else CachePolicy.DISABLED)
+        .build()
+        imageLoader.enqueue(request)
+   }
+
+    private fun setViewBorderRadius(view: AppCompatImageView, borderRadius: Int) {
+      view.clipToOutline = true
+      view.outlineProvider = object : ViewOutlineProvider() {
+        override fun getOutline(view: View, outline: Outline) {
+          outline.setRoundRect(0, 0, view.width, view.height, borderRadius.toFloat())
         }
       }
     }

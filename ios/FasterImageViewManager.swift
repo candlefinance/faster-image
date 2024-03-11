@@ -21,6 +21,7 @@ struct ImageOptions: Decodable {
     let failureImage: String?
     let base64Placeholder: String?
     let progressiveLoadingEnabled: Bool?
+    let borderRadius: Double?
     let url: String
 }
 
@@ -41,7 +42,6 @@ final class FasterImageView: UIView {
         ])
         lazyImageView.pipeline = .shared
         lazyImageView.priority = .high
-        self.clipsToBounds = true
         lazyImageView.onCompletion = { [weak self] result in
             self?.completionHandler(with: result)
         }
@@ -73,6 +73,11 @@ final class FasterImageView: UIView {
                 let options = try DictionaryDecoder().decode(ImageOptions.self, from: source)
                 if let base64Placeholder = options.base64Placeholder {
                     self.base64Placeholder = base64Placeholder
+                }
+                if let borderRadius = options.borderRadius {
+                    lazyImageView.layer.cornerRadius = CGFloat(borderRadius)
+                    lazyImageView.layer.masksToBounds = true
+                    self.clipsToBounds = true
                 }
                 if let blurhash = options.blurhash {
                     self.blurhash = blurhash

@@ -27,12 +27,17 @@ export default function App() {
           <FasterImageView
             onError={(event) => console.warn(event.nativeEvent.error)}
             style={styles.image}
+            onSuccess={(event) => {
+              console.log(event.nativeEvent);
+            }}
             // rounded
             source={{
               transitionDuration: 0.3,
+              borderRadius: 50,
               cachePolicy: 'discWithCacheControl',
               showActivityIndicator: true,
               failureImage: 'k0oGLQaSVsJ0BVhn2oq2Z5SQUQcZ',
+              thumbhash: 'k0oGLQaSVsJ0BVhn2oq2Z5SQUQcZ',
               url: item,
             }}
           />
