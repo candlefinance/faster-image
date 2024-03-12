@@ -44,7 +44,7 @@ yarn add @candlefinance/faster-image
 ```js
 import { FasterImageView } from '@candlefinance/faster-image';
 
-FasterImageView
+<FasterImageView
   onError={(event) => console.warn(event.nativeEvent.error)}
   style={styles.image}
   onSuccess={(event) => {
