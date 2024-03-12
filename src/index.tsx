@@ -27,6 +27,7 @@ type ImageOptions = {
   cachePolicy?: 'memory' | 'discWithCacheControl' | 'discNoCacheControl';
   failureImage?: string;
   progressiveLoadingEnabled?: boolean;
+  base64Placeholder?: string;
   url: string;
 };
 
