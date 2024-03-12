@@ -55,7 +55,6 @@ import { FasterImageView } from '@candlefinance/faster-image';
     borderRadius: 50,
     cachePolicy: 'discWithCacheControl',
     showActivityIndicator: true,
-    thumbhash: 'k0oGLQaSVsJ0BVhn2oq2Z5SQUQcZ',
     url: item,
   }}
 />;
