@@ -55,7 +55,7 @@ import { FasterImageView } from '@candlefinance/faster-image';
     borderRadius: 50,
     cachePolicy: 'discWithCacheControl',
     showActivityIndicator: true,
-    url: item,
+    url: 'https://picsum.photos/200/200?random=1',
   }}
 />;
 ```
