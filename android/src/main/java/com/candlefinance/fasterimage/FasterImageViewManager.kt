@@ -50,7 +50,7 @@ class FasterImageViewManager : SimpleViewManager<AppCompatImageView>() {
       val base64Placeholder = options.getString("base64Placeholder")
       val thumbHash = options.getString("thumbhash")
       val resizeMode = options.getString("resizeMode")
-      val transitionDuration = options.getDouble("transitionDuration")
+      val transitionDuration = if (options.hasKey("transitionDuration")) options.getInt("transitionDuration") else 100
       val borderRadius = if (options.hasKey("borderRadius")) options.getDouble("borderRadius") else 0.0
       val cachePolicy = options.getString("cachePolicy")
       val failureImage = options.getString("failureImage")
