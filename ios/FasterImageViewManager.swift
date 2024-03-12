@@ -143,7 +143,7 @@ final class FasterImageView: UIView {
             }
             DispatchQueue.global(qos: .userInteractive).async { [weak self] in
                 guard let self else { return }
-                guard var image = UIImage(base64Placeholder: base64Placeholder) else {
+                guard let image = UIImage(base64Placeholder: base64Placeholder) else {
                     return
                 }
                 DispatchQueue.main.async { [weak self] in
@@ -160,7 +160,7 @@ final class FasterImageView: UIView {
             }
             DispatchQueue.global(qos: .userInteractive).async { [weak self] in
                 guard let self else { return }
-                guard var image = UIImage(
+                guard let image = UIImage(
                     blurHash: blurhash,
                     size: .init(width: 32, height: 32)
                 ) else {
@@ -181,7 +181,7 @@ final class FasterImageView: UIView {
             DispatchQueue.global(qos: .userInteractive).async { [weak self] in
                 guard let self else { return }
                 guard
-                    var image =
+                    let image =
                         UIImage(blurHash: failureImage, size: .init(width: 32, height: 32))
                         ?? UIImage(base64Placeholder: failureImage)
                         ?? UIImage(base64Hash: failureImage) else {
@@ -201,7 +201,7 @@ final class FasterImageView: UIView {
             }
             DispatchQueue.global(qos: .userInteractive).async { [weak self] in
                 guard let self else { return }
-                guard var image = UIImage(base64Hash: thumbhash) else {
+                guard let image = UIImage(base64Hash: thumbhash) else {
                     return
                 }
                 DispatchQueue.main.async { [weak self] in
