@@ -59,15 +59,10 @@
           setViewBorderRadius(view, borderRadius.toInt())
         }
 
-        var drawablePlaceholder: Drawable? = null
-        if (base64Placeholder != null) {
-          drawablePlaceholder = getDrawableFromBase64(base64Placeholder, view)
-        }
+       val drawablePlaceholder: Drawable? = base64Placeholder?.let { getDrawableFromBase64(it, view) }
+       val failureDrawable: Drawable? = failureImage?.let { getDrawableFromBase64(it, view) }
+       val thumbHashDrawable = thumbHash?.let { makeThumbHash(view, it) }
 
-        var failureDrawable: Drawable? = null
-        if (failureImage != null) {
-          failureDrawable = getDrawableFromBase64(failureImage, view)
-        }
        val imageLoader = view.context.imageLoader
        val request = ImageRequest.Builder(view.context)
           .data(url)
@@ -97,8 +92,7 @@
             }
           )
           .crossfade(transitionDuration.toInt() ?: 100)
-          .placeholder(drawablePlaceholder)
-          .placeholder(thumbHash?.let { makeThumbHash(view, it) })
+          .placeholder(drawablePlaceholder ?: thumbHashDrawable)
           .error(failureDrawable ?: drawablePlaceholder)
           .fallback(failureDrawable ?: drawablePlaceholder)
           .scale(getResizeMode(resizeMode))
