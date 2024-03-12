@@ -10,7 +10,6 @@ final class FasterImageViewManager: RCTViewManager {
     }
 }
 
-
 struct ImageOptions: Decodable {
     let blurhash: String?
     let thumbhash: String?

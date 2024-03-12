@@ -2,12 +2,18 @@ import * as React from 'react';
 
 import { FasterImageView } from '@candlefinance/faster-image';
 // import FastImage from 'react-native-fast-image';
-import { Dimensions, FlatList, SafeAreaView, StyleSheet } from 'react-native';
+import {
+  Dimensions,
+  FlatList,
+  Platform,
+  SafeAreaView,
+  StyleSheet,
+} from 'react-native';
 
 const size = Dimensions.get('window').width / 3;
 const imageURLs = Array.from(
   { length: 1000 },
-  (_, i) => `https://picsum.photos/200/200?random=${i}`
+  (_, i) => `https://picsum.photos/200/200?random=${4000 + i}`
 );
 
 export default function App() {
@@ -19,8 +25,8 @@ export default function App() {
         numColumns={3}
         columnWrapperStyle={styles.column}
         getItemLayout={(_, index) => ({
-          length: size,
-          offset: size * index,
+          length: size - 16,
+          offset: (size - 16) * index,
           index,
         })}
         renderItem={({ item }) => (
@@ -32,10 +38,10 @@ export default function App() {
             }}
             source={{
               transitionDuration: 0.3,
-              borderRadius: 50,
+              borderRadius:
+                Platform.OS === 'android' ? size * 2 : (size - 16) / 2,
               cachePolicy: 'discWithCacheControl',
               showActivityIndicator: true,
-              thumbhash: 'k0oGLQaSVsJ0BVhn2oq2Z5SQUQcZ',
               url: item,
             }}
           />
@@ -48,18 +54,22 @@ export default function App() {
 const styles = StyleSheet.create({
   sep: { height: 24 },
   image: {
-    width: size,
-    height: size,
-    borderRadius: size / 2,
+    width: size - 16,
+    height: size - 16,
+    borderRadius: (size - 16) / 2,
     overflow: 'hidden',
+    backgroundColor: 'white',
   },
   container: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: '#f1f1f1',
   },
   column: {
     justifyContent: 'space-between',
-    width: Dimensions.get('window').width,
+    marginVertical: 8,
+    marginHorizontal: 8,
+    gap: 8,
   },
 });
