@@ -68,15 +68,15 @@ FasterImageView
 | url                       | string   |                       | The URL of the image                                                                                  |
 | style                     | object   |                       | The style of the image                                                                                |
 | resizeMode                | string   | contain               | The resize mode of the image                                                                          |
-| thumbhash                 | string   |                       | The thumbhash of the image as a base64 encoded string to show while loading                           |
-| blurhash                  | string   |                       | The blurhash of the image to show while loading                                                       |
+| thumbhash                 | string   |                       | The thumbhash of the image as a base64 encoded string to show while loading (Android not tested)                        |
+| blurhash                  | string   |                       | The blurhash of the image to show while loading (iOS only)                                                |
 | showActivityIndicator     | boolean  | false  (iOS)              | Whether to show the UIActivityIndicatorView indicator when the image is loading                       |
 | base64Placeholder         | string   |                       | The base64 encoded placeholder image to show while the image is loading                               |
-| cachePolicy               | string   | memory                | The cache policy of the image                                                                         |
+| cachePolicy               | string   | memory                | The cache policy of the image                                                                     |
 | transitionDuration        | number   | 0.75 (iOS) Android (100) | The transition duration of the image                                      |
-| borderRadius              | number   | 0                     | border radius of image                                                                                |
+| borderRadius              | number   | 0                     | border radius of image                                                                              |
 | failureImage              | string   |                       | If the image fails to download this will be set (blurhash, thumbhash, base64)                        |
-| progressiveLoadingEnabled | boolean  | false                 | Progressively load images                                                                             |
+| progressiveLoadingEnabled | boolean  | false                 | Progressively load images (iOS only)                                                                           |
 | onError                   | function |                       | The function to call when an error occurs. The error is passed as the first argument of the function  |
 | onSuccess                 | function |                       | The function to call when the image is successfully loaded                                            |
 
