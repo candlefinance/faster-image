@@ -1,6 +1,6 @@
 {
   "name": "@candlefinance/faster-image",
-  "version": "1.3.3",
+  "version": "1.3.4",
   "description": "test",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
