@@ -11,7 +11,8 @@
 
 <br/>
 
-[![Watch the video](https://github-production-user-asset-6210df.s3.amazonaws.com/12258850/312097840-543e2f67-0d2b-4813-8993-7672e1d33fac.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAVCODYLSA53PQK4ZA%2F20240312%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20240312T134017Z&X-Amz-Expires=300&X-Amz-Signature=4c43bc8467188be3e4af67fba56a093362c60232e701d999f6a6b2fcde2f18e5&X-Amz-SignedHeaders=host&actor_id=12258850&key_id=0&repo_id=618961414)](https://github-production-user-asset-6210df.s3.amazonaws.com/12258850/312097064-7095b50f-2a48-4cb5-a614-32f5b8e6f9c3.mp4)
+https://github.com/candlefinance/faster-image/assets/12258850/ede91008-4dca-417c-a2ca-4d2177066316
+
 
 A performant way to render images in React Native with a focus on speed and memory usage. Powered by [Nuke](https://github.com/kean/nuke), the smallest and most performant image loading library for iOS and macOS and [Coil](https://github.com/coil-kt/coil) on Android.
 
