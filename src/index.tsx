@@ -1,8 +1,4 @@
-import {
-  ImageResizeMode,
-  ImageStyle,
-  requireNativeComponent,
-} from 'react-native';
+import { ImageStyle, requireNativeComponent } from 'react-native';
 
 /*
  * @property {string} url - URL of the image **required**
