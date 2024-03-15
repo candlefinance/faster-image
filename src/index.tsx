@@ -17,10 +17,22 @@ import {
  * @property {('memory' | 'discWithCacheControl' | 'discNoCacheControl')} [cachePolicy] - Cache [policy](https://kean-docs.github.io/nuke/documentation/nuke/imagepipeline), defaults to 'memory'. 'discWithCacheControl' will cache the image in the disc and use the cache control headers to determine if the image should be re-fetched. 'discNoCacheControl' will cache the image in the disc and never re-fetch it.
  * @property {number} [borderRadius] - Border radius of the image
  */
-type ImageOptions = {
+export type ImageOptions = {
   blurhash?: string;
   thumbhash?: string;
-  resizeMode?: ImageResizeMode;
+  resizeMode?:
+    | 'fill'
+    | 'contain'
+    | 'cover'
+    | 'center'
+    | 'top'
+    | 'bottom'
+    | 'left'
+    | 'right'
+    | 'topLeft'
+    | 'topRight'
+    | 'bottomLeft'
+    | 'bottomRight';
   borderRadius?: number;
   showActivityIndicator?: boolean;
   transitionDuration?: number;

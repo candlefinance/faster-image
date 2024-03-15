@@ -111,7 +111,8 @@ final class FasterImageView: UIView {
     
     var resizeMode = "contain" {
         didSet {
-            lazyImageView.contentMode = ResizeMode(rawValue: resizeMode)?.contentMode ?? .scaleAspectFit
+            let mode = ResizeMode(rawValue: resizeMode)
+            lazyImageView.imageView.contentMode = mode?.contentMode ?? .scaleAspectFit
         }
     }
     
