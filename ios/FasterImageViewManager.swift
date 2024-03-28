@@ -95,9 +95,8 @@ final class FasterImageView: UIView {
                     self.failureImage = failureImage
                 }
                 progressiveLoadingEnabled = options.progressiveLoadingEnabled ?? false
-                url = options.url
-
                 grayscale = options.grayscale ?? 0.0
+                url = options.url
             } catch {
                 onError?([
                     "error": error.localizedDescription,
