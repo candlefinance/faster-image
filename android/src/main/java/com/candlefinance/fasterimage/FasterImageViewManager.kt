@@ -21,7 +21,7 @@
   import com.facebook.react.uimanager.annotations.ReactProp
   import com.facebook.react.uimanager.events.RCTEventEmitter
   import android.graphics.ColorMatrix
-  import android.graphics.ColorMatrixColorFilter  
+  import android.graphics.ColorMatrixColorFilter
 
 
   class FasterImageViewManager : SimpleViewManager<AppCompatImageView>() {
@@ -56,7 +56,7 @@
         val borderRadius = if (options.hasKey("borderRadius")) options.getDouble("borderRadius") else 0.0
         val cachePolicy = options.getString("cachePolicy")
         val failureImage = options.getString("failureImage")
-        val grayscale = options.getDouble("grayscale")
+        val grayscale = if (options.hasKey("grayscale")) options.getDouble("grayscale") else 0.0
 
         if (borderRadius != 0.0) {
           setViewBorderRadius(view, borderRadius.toInt())
@@ -82,13 +82,18 @@
               reactContext
                 .getJSModule(RCTEventEmitter::class.java)
                 .receiveEvent(view.id, "onSuccess", event)
-              val grayscaleDrawable = result.mutate()
-              val colorMatrix = ColorMatrix().apply {
-                  setSaturation((1.0-grayscale).toFloat()) 
+
+              if (grayscale == 0.0) {
+                view.setImageDrawable(result)
+              } else {
+                val grayscaleDrawable = result.mutate()
+                val colorMatrix = ColorMatrix().apply {
+                    setSaturation((1.0 - grayscale).toFloat())
+                }
+                val colorFilter = ColorMatrixColorFilter(colorMatrix)
+                grayscaleDrawable.colorFilter = colorFilter
+                view.setImageDrawable(grayscaleDrawable)
               }
-              val colorFilter = ColorMatrixColorFilter(colorMatrix)
-              grayscaleDrawable.colorFilter = colorFilter
-              view.setImageDrawable(grayscaleDrawable)
             },
             onError = { error ->
                 val event = Arguments.createMap()

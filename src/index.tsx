@@ -37,7 +37,7 @@ export type ImageOptions = {
   progressiveLoadingEnabled?: boolean;
   base64Placeholder?: string;
   url: string;
-  grayscale: number;
+  grayscale?: number;
 };
 
 /**
