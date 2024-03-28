@@ -1,10 +1,10 @@
 @objc(FasterImageViewManager)
 final class FasterImageViewManager: RCTViewManager {
-    
+
     override func view() -> (FasterImageView) {
         return FasterImageView()
     }
-    
+
     @objc override static func requiresMainQueueSetup() -> Bool {
         return true
     }
@@ -22,13 +22,14 @@ struct ImageOptions: Decodable {
     let progressiveLoadingEnabled: Bool?
     let borderRadius: Double?
     let url: String
+    let grayscale: Double?
 }
 
 /// A wrapper around `LazyImageView` to make it compatible with React Native.
 final class FasterImageView: UIView {
-    
+
     // MARK: - Initializers
-    
+
     init() {
         super.init(frame: .zero)
         addSubview(lazyImageView)
@@ -45,25 +46,25 @@ final class FasterImageView: UIView {
             self?.completionHandler(with: result)
         }
     }
-    
+
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-    
+
     // MARK: - Views
-    
+
     private lazy var lazyImageView = LazyImageView()
-    
+
     // MARK: - Callbacks
-    
+
     @objc var onError: RCTDirectEventBlock?
     @objc var onSuccess: RCTDirectEventBlock?
-    
+
     // MARK: - Properties
     @objc var source: NSDictionary? = nil {
         didSet {
             guard let source = source else {
-                onError?([  
+                onError?([
                     "error": "Expected a valid source but got: \("nil")",
                 ])
                 return
@@ -94,6 +95,7 @@ final class FasterImageView: UIView {
                     self.failureImage = failureImage
                 }
                 progressiveLoadingEnabled = options.progressiveLoadingEnabled ?? false
+                grayscale = options.grayscale ?? 0.0
                 url = options.url
             } catch {
                 onError?([
@@ -102,40 +104,56 @@ final class FasterImageView: UIView {
             }
         }
     }
-    
+
+    var grayscale = 0.0 {
+        didSet {
+            if grayscale > 0 {
+                lazyImageView.processors = [
+                    ImageProcessors.CoreImageFilter(
+                        name: "CIColorControls",
+                        parameters: [
+                            "inputSaturation": 1.0 - grayscale,
+                        ],
+                        identifier: "custom.grayscale.\(grayscale)"
+                    )
+                ]
+            }
+        }
+    }
+
     var showActivityIndicator = false {
         didSet {
             lazyImageView.placeholderView = UIActivityIndicatorView()
         }
     }
-    
+
     var resizeMode = "contain" {
         didSet {
             let mode = ResizeMode(rawValue: resizeMode)
             lazyImageView.imageView.contentMode = mode?.contentMode ?? .scaleAspectFit
         }
     }
-    
+
     var transitionDuration: NSNumber = 0.5 {
         didSet {
             lazyImageView.transition = .fadeIn(duration: transitionDuration.doubleValue)
         }
     }
-    
+
     var progressiveLoadingEnabled = false {
         didSet {
             lazyImageView.isProgressiveImageRenderingEnabled = progressiveLoadingEnabled
         }
     }
-    
+
     var cachePolicy = "memory" {
         didSet {
             lazyImageView.pipeline = CachePolicy(rawValue: cachePolicy)?.pipeline ?? .shared
         }
     }
-    
+
     // MARK: - Optional Properties
-    
+
     var base64Placeholder: String? {
         didSet {
             guard let base64Placeholder else {
@@ -152,7 +170,7 @@ final class FasterImageView: UIView {
             }
         }
     }
-    
+
     var blurhash: String? {
         didSet {
             guard let blurhash else {
@@ -172,7 +190,7 @@ final class FasterImageView: UIView {
             }
         }
     }
-    
+
     var failureImage: String? {
         didSet {
             guard let failureImage else {
@@ -193,7 +211,7 @@ final class FasterImageView: UIView {
             }
         }
     }
-    
+
     var thumbhash: String? {
         didSet {
             guard let thumbhash else {
@@ -210,7 +228,7 @@ final class FasterImageView: UIView {
             }
         }
     }
-    
+
     var url: String? = nil {
         didSet {
             guard let url else {
@@ -222,13 +240,13 @@ final class FasterImageView: UIView {
             lazyImageView.url = URL(string: url)
         }
     }
-    
+
 }
 
 // MARK: - Extensions
 
 fileprivate extension FasterImageView {
-    
+
     func completionHandler(with result: Result<ImageResponse, Error>) {
         switch result {
         case .success(let value):
@@ -243,5 +261,5 @@ fileprivate extension FasterImageView {
             ])
         }
     }
-    
+
 }
