@@ -4,20 +4,19 @@
   "private": true,
   "scripts": {
     "android": "react-native run-android",
-    "ios": "react-native run-ios --simulator=\"iPhone 14 Pro Max\"",
+    "ios": "react-native run-ios",
     "start": "react-native start",
     "pods": "pod-install --quiet"
   },
   "dependencies": {
     "react": "18.2.0",
-    "react-native": "0.71.4",
-    "react-native-fast-image": "^8.6.3"
+    "react-native": "0.71.17"
   },
   "devDependencies": {
-    "@babel/core": "^7.20.0",
-    "@babel/preset-env": "^7.20.0",
-    "@babel/runtime": "^7.20.0",
+    "@babel/core": "^7.24.3",
+    "@babel/preset-env": "^7.24.3",
+    "@babel/runtime": "^7.24.1",
     "babel-plugin-module-resolver": "^4.1.0",
-    "metro-react-native-babel-preset": "0.73.8"
+    "metro-react-native-babel-preset": "0.73.10"
   }
 }

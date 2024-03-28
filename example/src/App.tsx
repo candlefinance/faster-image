@@ -1,7 +1,6 @@
 import * as React from 'react';
 
 import { FasterImageView } from '@candlefinance/faster-image';
-// import FastImage from 'react-native-fast-image';
 import {
   Dimensions,
   FlatList,
