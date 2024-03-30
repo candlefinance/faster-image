@@ -1,6 +1,6 @@
-import { Platform, ImageStyle, requireNativeComponent } from 'react-native';
+import { ImageStyle, requireNativeComponent } from 'react-native';
 
-type IOSImageResizeMode =  'fill'
+export type IOSImageResizeMode =  'fill'
     | 'contain'
     | 'cover'
     | 'center'
@@ -13,7 +13,7 @@ type IOSImageResizeMode =  'fill'
     | 'bottomLeft'
     | 'bottomRight'
 
-type AndroidImageResizeMode = 'fill'
+export type AndroidImageResizeMode = 'fill'
     | 'contain'
     | 'cover'
     | 'center'
