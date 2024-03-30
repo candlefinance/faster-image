@@ -2,12 +2,15 @@
 
   import android.graphics.Bitmap
   import android.graphics.BitmapFactory
+  import android.graphics.ColorMatrix
+  import android.graphics.ColorMatrixColorFilter
   import android.graphics.Outline
   import android.graphics.drawable.BitmapDrawable
   import android.graphics.drawable.Drawable
   import android.util.Base64
   import android.view.View
   import android.view.ViewOutlineProvider
+  import android.widget.ImageView.ScaleType
   import androidx.appcompat.widget.AppCompatImageView
   import coil.imageLoader
   import coil.request.CachePolicy
@@ -20,8 +23,6 @@
   import com.facebook.react.uimanager.ThemedReactContext
   import com.facebook.react.uimanager.annotations.ReactProp
   import com.facebook.react.uimanager.events.RCTEventEmitter
-  import android.graphics.ColorMatrix
-  import android.graphics.ColorMatrixColorFilter
 
 
   class FasterImageViewManager : SimpleViewManager<AppCompatImageView>() {
@@ -61,6 +62,8 @@
         if (borderRadius != 0.0) {
           setViewBorderRadius(view, borderRadius.toInt())
         }
+
+       view.scaleType = RESIZE_MODE[resizeMode]
 
        val drawablePlaceholder: Drawable? = base64Placeholder?.let { getDrawableFromBase64(it, view) }
        val failureDrawable: Drawable? = failureImage?.let { getDrawableFromBase64(it, view) }
@@ -109,7 +112,6 @@
           .placeholder(drawablePlaceholder ?: thumbHashDrawable)
           .error(failureDrawable ?: drawablePlaceholder)
           .fallback(failureDrawable ?: drawablePlaceholder)
-          .scale(getResizeMode(resizeMode))
           .memoryCachePolicy(if (cachePolicy == "memory") CachePolicy.ENABLED else CachePolicy.DISABLED)
           .diskCachePolicy(if (cachePolicy == "discWithCacheControl" || cachePolicy == "discNoCacheControl") CachePolicy.ENABLED else CachePolicy.DISABLED)
           .build()
@@ -132,14 +134,6 @@
         return BitmapDrawable(view.context.resources, decodedByte)
       }
 
-      private fun getResizeMode(resizeMode: String?): Scale {
-        return when (resizeMode) {
-          "cover" -> Scale.FILL
-          "contain" -> Scale.FIT
-          else -> Scale.FIT
-        }
-      }
-
       private fun makeThumbHash(view: AppCompatImageView, hash: String): Drawable {
         val thumbHash = ThumbHash.thumbHashToRGBA(Base64.decode(hash, Base64.DEFAULT))
         val bitmap = Bitmap.createBitmap(thumbHash.width, thumbHash.height, Bitmap.Config.ARGB_8888)
@@ -154,6 +148,22 @@
         }
         return intArray
       }
+
+    companion object {
+      private val RESIZE_MODE = mapOf(
+        "contain" to ScaleType.FIT_CENTER,
+        "cover" to ScaleType.CENTER_CROP,
+        "fill" to ScaleType.FIT_XY,
+        "center" to ScaleType.CENTER_INSIDE,
+        "top" to ScaleType.FIT_START,
+        "bottom" to ScaleType.FIT_END,
+      )
+
+      private val SCALE_TYPE = mapOf(
+        "fit" to Scale.FIT,
+        "fill" to Scale.FILL
+      )
+    }
   }
 
   object ThumbHash {

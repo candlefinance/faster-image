@@ -1,4 +1,26 @@
-import { ImageStyle, requireNativeComponent } from 'react-native';
+import { Platform, ImageStyle, requireNativeComponent } from 'react-native';
+
+type IOSImageResizeMode =  'fill'
+    | 'contain'
+    | 'cover'
+    | 'center'
+    | 'top'
+    | 'bottom'
+    | 'left'
+    | 'right'
+    | 'topLeft'
+    | 'topRight'
+    | 'bottomLeft'
+    | 'bottomRight'
+
+type AndroidImageResizeMode = 'fill'
+    | 'contain'
+    | 'cover'
+    | 'center'
+    | 'top'
+    | 'bottom'
+    | 'left'
+    | 'right'
 
 /*
  * @property {string} url - URL of the image **required**
@@ -16,19 +38,7 @@ import { ImageStyle, requireNativeComponent } from 'react-native';
 export type ImageOptions = {
   blurhash?: string;
   thumbhash?: string;
-  resizeMode?:
-    | 'fill'
-    | 'contain'
-    | 'cover'
-    | 'center'
-    | 'top'
-    | 'bottom'
-    | 'left'
-    | 'right'
-    | 'topLeft'
-    | 'topRight'
-    | 'bottomLeft'
-    | 'bottomRight';
+  resizeMode?: IOSImageResizeMode | AndroidImageResizeMode;
   borderRadius?: number;
   showActivityIndicator?: boolean;
   transitionDuration?: number;
