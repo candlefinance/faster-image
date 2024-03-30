@@ -79,6 +79,7 @@ import { FasterImageView } from '@candlefinance/faster-image';
 | progressiveLoadingEnabled | boolean  | false                    | Progressively load images (iOS only)                                                                 |
 | onError                   | function |                          | The function to call when an error occurs. The error is passed as the first argument of the function |
 | onSuccess                 | function |                          | The function to call when the image is successfully loaded                                           |
+| grayscale                 | number |     0                     | Filter or transformation that converts the image into shades of gray (0-1).                                         |
 
 ## Contributing
 
