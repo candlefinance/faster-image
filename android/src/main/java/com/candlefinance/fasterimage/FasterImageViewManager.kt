@@ -63,7 +63,11 @@
           setViewBorderRadius(view, borderRadius.toInt())
         }
 
-       view.scaleType = RESIZE_MODE[resizeMode]
+      if (RESIZE_MODE.containsKey(resizeMode)) {
+        view.scaleType = RESIZE_MODE[resizeMode]
+      } else {
+        view.scaleType = ScaleType.FIT_CENTER
+      }
 
        val drawablePlaceholder: Drawable? = base64Placeholder?.let { getDrawableFromBase64(it, view) }
        val failureDrawable: Drawable? = failureImage?.let { getDrawableFromBase64(it, view) }
