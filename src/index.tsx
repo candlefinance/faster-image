@@ -1,26 +1,26 @@
 import { ImageStyle, requireNativeComponent } from 'react-native';
 
-export type IOSImageResizeMode =  'fill'
-    | 'contain'
-    | 'cover'
-    | 'center'
-    | 'top'
-    | 'bottom'
-    | 'left'
-    | 'right'
-    | 'topLeft'
-    | 'topRight'
-    | 'bottomLeft'
-    | 'bottomRight'
+export type IOSImageResizeMode =
+  | 'fill'
+  | 'contain'
+  | 'cover'
+  | 'center'
+  | 'top'
+  | 'bottom'
+  | 'left'
+  | 'right'
+  | 'topLeft'
+  | 'topRight'
+  | 'bottomLeft'
+  | 'bottomRight';
 
-export type AndroidImageResizeMode = 'fill'
-    | 'contain'
-    | 'cover'
-    | 'center'
-    | 'top'
-    | 'bottom'
-    | 'left'
-    | 'right'
+export type AndroidImageResizeMode =
+  | 'fill'
+  | 'contain'
+  | 'cover'
+  | 'center'
+  | 'top'
+  | 'bottom';
 
 /*
  * @property {string} url - URL of the image **required**
