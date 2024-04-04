@@ -34,6 +34,8 @@ export type AndroidImageResizeMode =
  * @property {boolean} [progressiveLoadingEnabled] - Enable progressive loading, defaults to false
  * @property {('memory' | 'discWithCacheControl' | 'discNoCacheControl')} [cachePolicy] - Cache [policy](https://kean-docs.github.io/nuke/documentation/nuke/imagepipeline), defaults to 'memory'. 'discWithCacheControl' will cache the image in the disc and use the cache control headers to determine if the image should be re-fetched. 'discNoCacheControl' will cache the image in the disc and never re-fetch it.
  * @property {number} [borderRadius] - Border radius of the image
+ * @property {number} [grayscale] - Grayscale value of the image, 0-1
+ * @property {boolean} [allowHardware] - Allow hardware rendering, defaults to true (Android only)
  */
 export type ImageOptions = {
   blurhash?: string;
@@ -48,6 +50,7 @@ export type ImageOptions = {
   base64Placeholder?: string;
   url: string;
   grayscale?: number;
+  allowHardware?: boolean;
 };
 
 /**

@@ -58,6 +58,7 @@
         val cachePolicy = options.getString("cachePolicy")
         val failureImage = options.getString("failureImage")
         val grayscale = if (options.hasKey("grayscale")) options.getDouble("grayscale") else 0.0
+        val allowHardware = if (options.hasKey("allowHardware")) options.getBoolean("allowHardware") else true
 
         if (borderRadius != 0.0) {
           setViewBorderRadius(view, borderRadius.toInt())
@@ -118,6 +119,7 @@
           .fallback(failureDrawable ?: drawablePlaceholder)
           .memoryCachePolicy(if (cachePolicy == "memory") CachePolicy.ENABLED else CachePolicy.DISABLED)
           .diskCachePolicy(if (cachePolicy == "discWithCacheControl" || cachePolicy == "discNoCacheControl") CachePolicy.ENABLED else CachePolicy.DISABLED)
+          .allowHardware(allowHardware)
           .build()
 
           imageLoader.enqueue(request)
