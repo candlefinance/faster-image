@@ -3,7 +3,7 @@
  <a href="https://www.npmjs.com/package/@candlefinance%2Ffaster-image">
   <img src="https://img.shields.io/npm/dm/@candlefinance%2Ffaster-image" alt="npm downloads" />
 </a>
-  <a alt="discord users online" href="https://discord.gg/qnAgjxhg6n" 
+  <a alt="discord users online" href="https://discord.gg/qnAgjxhg6n"
   target="_blank"
   rel="noopener noreferrer">
     <img alt="discord users online" src="https://img.shields.io/discord/986610142768406548?label=Discord&logo=discord&logoColor=white&cacheSeconds=3600"/>
@@ -79,7 +79,8 @@ import { FasterImageView } from '@candlefinance/faster-image';
 | progressiveLoadingEnabled | boolean  | false                    | Progressively load images (iOS only)                                                                 |
 | onError                   | function |                          | The function to call when an error occurs. The error is passed as the first argument of the function |
 | onSuccess                 | function |                          | The function to call when the image is successfully loaded                                           |
-| grayscale                 | number |     0                     | Filter or transformation that converts the image into shades of gray (0-1).                                         |
+| grayscale                 | number   | 0                        | Filter or transformation that converts the image into shades of gray (0-1).                          |
+| allowHardware             | boolean  | true                     | Allow hardware rendering (Android only)                                                              |
 
 ## Contributing
 
