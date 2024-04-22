@@ -73,10 +73,19 @@
        val drawablePlaceholder: Drawable? = base64Placeholder?.let { getDrawableFromBase64(it, view) }
        val failureDrawable: Drawable? = failureImage?.let { getDrawableFromBase64(it, view) }
        val thumbHashDrawable = thumbHash?.let { makeThumbHash(view, it) }
+      
+       // Handle base64 image sources
+       val imageData = url?.let {
+         if (it.startsWith("data:image")) {
+           getDrawableFromBase64(it.substringAfter("base64,"), view)
+         } else {
+           it // Use the URL directly
+         }
+       }
 
        val imageLoader = view.context.imageLoader
        val request = ImageRequest.Builder(view.context)
-          .data(url)
+          .data(imageData)
           .target(
             onStart = { placeholder ->
               view.setImageDrawable(placeholder)
