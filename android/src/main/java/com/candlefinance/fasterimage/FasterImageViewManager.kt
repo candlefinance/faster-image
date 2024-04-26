@@ -7,6 +7,7 @@
   import android.graphics.Outline
   import android.graphics.drawable.BitmapDrawable
   import android.graphics.drawable.Drawable
+  import android.net.Uri
   import android.util.Base64
   import android.view.View
   import android.view.ViewOutlineProvider
@@ -23,6 +24,7 @@
   import com.facebook.react.uimanager.ThemedReactContext
   import com.facebook.react.uimanager.annotations.ReactProp
   import com.facebook.react.uimanager.events.RCTEventEmitter
+  import okhttp3.Headers
 
 
   class FasterImageViewManager : SimpleViewManager<AppCompatImageView>() {
@@ -59,6 +61,7 @@
         val failureImage = options.getString("failureImage")
         val grayscale = if (options.hasKey("grayscale")) options.getDouble("grayscale") else 0.0
         val allowHardware = if (options.hasKey("allowHardware")) options.getBoolean("allowHardware") else true
+       val headers = options.getMap("headers")
 
         if (borderRadius != 0.0) {
           setViewBorderRadius(view, borderRadius.toInt())
@@ -73,19 +76,26 @@
        val drawablePlaceholder: Drawable? = base64Placeholder?.let { getDrawableFromBase64(it, view) }
        val failureDrawable: Drawable? = failureImage?.let { getDrawableFromBase64(it, view) }
        val thumbHashDrawable = thumbHash?.let { makeThumbHash(view, it) }
-      
+
+       var requestBuilder = ImageRequest.Builder(view.context)
        // Handle base64 image sources
-       val imageData = url?.let {
+       url?.let {
          if (it.startsWith("data:image")) {
-           getDrawableFromBase64(it.substringAfter("base64,"), view)
+           requestBuilder = requestBuilder.data(
+             getDrawableFromBase64(it.substringAfter("base64,"), view)
+           )
          } else {
-           it // Use the URL directly
+           requestBuilder = requestBuilder.data(it)
+           headers?.let {
+             for (entry in it.entryIterator) {
+               requestBuilder.setHeader(entry.key, entry.value as String)
+             }
+           }
          }
        }
 
        val imageLoader = view.context.imageLoader
-       val request = ImageRequest.Builder(view.context)
-          .data(imageData)
+       val request = requestBuilder
           .target(
             onStart = { placeholder ->
               view.setImageDrawable(placeholder)

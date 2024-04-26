@@ -22,6 +22,7 @@ struct ImageOptions: Decodable {
     let progressiveLoadingEnabled: Bool?
     let borderRadius: Double?
     let url: String
+    let headers: [String: String]?
     let grayscale: Double?
 }
 
@@ -96,7 +97,11 @@ final class FasterImageView: UIView {
                 }
                 progressiveLoadingEnabled = options.progressiveLoadingEnabled ?? false
                 grayscale = options.grayscale ?? 0.0
-                url = options.url
+
+                var _urlRequest = URLRequest(url: URL(string: options.url)!)
+                _urlRequest.allHTTPHeaderFields = options.headers
+
+                urlRequest = _urlRequest
             } catch {
                 onError?([
                     "error": error.localizedDescription,
@@ -229,15 +234,9 @@ final class FasterImageView: UIView {
         }
     }
 
-    var url: String? = nil {
+    var urlRequest: URLRequest? = nil {
         didSet {
-            guard let url else {
-                onError?([
-                    "error": "Expected a valid url but got: \(url ?? "nil")",
-                ])
-                return
-            }
-            lazyImageView.url = URL(string: url)
+            lazyImageView.request = ImageRequest(urlRequest: urlRequest!)
         }
     }
 

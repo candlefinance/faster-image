@@ -49,6 +49,7 @@ export type ImageOptions = {
   progressiveLoadingEnabled?: boolean;
   base64Placeholder?: string;
   url: string;
+  headers?: Record<string, string>;
   grayscale?: number;
   allowHardware?: boolean;
 };
