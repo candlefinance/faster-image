@@ -81,6 +81,7 @@ import { FasterImageView } from '@candlefinance/faster-image';
 | onSuccess                 | function |                          | The function to call when the image is successfully loaded                                           |
 | grayscale                 | number   | 0                        | Filter or transformation that converts the image into shades of gray (0-1).                          |
 | allowHardware             | boolean  | true                     | Allow hardware rendering (Android only)                                                              |
+| headers             | Record<string, string>  | undefined                     | Pass in headers                                                              |
 
 ## Contributing
 
