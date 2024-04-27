@@ -98,10 +98,16 @@ final class FasterImageView: UIView {
                 progressiveLoadingEnabled = options.progressiveLoadingEnabled ?? false
                 grayscale = options.grayscale ?? 0.0
 
-                var _urlRequest = URLRequest(url: URL(string: options.url)!)
-                _urlRequest.allHTTPHeaderFields = options.headers
-
-                urlRequest = _urlRequest
+                if let url = URL(string: options.url) {
+                    var urlRequestFromOptions = URLRequest(url: url)
+                    urlRequestFromOptions.allHTTPHeaderFields = options.headers
+                    
+                    urlRequest = urlRequestFromOptions
+                } else {
+                    onError?([
+                        "error": "Expected a valid url but got: \(options.url)",
+                    ])
+                }
             } catch {
                 onError?([
                     "error": error.localizedDescription,
