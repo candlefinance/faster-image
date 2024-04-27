@@ -7,6 +7,7 @@
   target="_blank"
   rel="noopener noreferrer">
     <img alt="discord users online" src="https://img.shields.io/discord/986610142768406548?label=Discord&logo=discord&logoColor=white&cacheSeconds=3600"/>
+  </a>
 </div>
 
 <br/>
