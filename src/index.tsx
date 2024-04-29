@@ -39,6 +39,8 @@ export type AndroidImageResizeMode =
  */
 export type ImageOptions = {
   blurhash?: string;
+  accessible?: boolean;
+  accessibilityLabel?: string;
   thumbhash?: string;
   resizeMode?: IOSImageResizeMode | AndroidImageResizeMode;
   borderRadius?: number;
