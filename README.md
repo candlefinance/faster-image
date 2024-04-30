@@ -83,7 +83,8 @@ import { FasterImageView } from '@candlefinance/faster-image';
 | grayscale                 | number   | 0                        | Filter or transformation that converts the image into shades of gray (0-1).                          |
 | allowHardware             | boolean  | true                     | Allow hardware rendering (Android only)                                                              |
 | headers             | Record<string, string>  | undefined                     | Pass in headers                                                              |
-
+| accessibilityLabel             | string  | undefined                     | accessibility label                                                        |
+| accessible             | boolean  | undefined                     | is accessible                                                       |
 ## Contributing
 
 See the [contributing guide](CONTRIBUTING.md) to learn how to contribute to the repository and the development workflow.
