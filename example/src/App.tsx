@@ -2,12 +2,12 @@ import * as React from 'react';
 
 import { FasterImageView, clearCache } from '@candlefinance/faster-image';
 import {
-  Button,
   Dimensions,
   FlatList,
   Platform,
   SafeAreaView,
   StyleSheet,
+  DevSettings,
 } from 'react-native';
 
 const size = Dimensions.get('window').width / 3;
@@ -15,6 +15,10 @@ const imageURLs = Array.from(
   { length: 100 },
   (_, i) => `https://picsum.photos/200/200?random=${4000 + i}`
 );
+
+if (__DEV__ && Platform.OS === 'ios') {
+  DevSettings.addMenuItem('Clear Cache', () => clearCache());
+}
 
 export default function App() {
   return (
@@ -36,7 +40,6 @@ export default function App() {
           url: 'https://picsum.photos/300/300?random=5',
         }}
       /> */}
-      <Button title="Clear Cache" onPress={clearCache} color="red" />
       <FlatList
         keyExtractor={(item) => item}
         data={imageURLs}
