@@ -1,7 +1,8 @@
 import * as React from 'react';
 
-import { FasterImageView } from '@candlefinance/faster-image';
+import { FasterImageView, clearCache } from '@candlefinance/faster-image';
 import {
+  Button,
   Dimensions,
   FlatList,
   Platform,
@@ -35,6 +36,7 @@ export default function App() {
           url: 'https://picsum.photos/300/300?random=5',
         }}
       /> */}
+      <Button title="Clear Cache" onPress={clearCache} color="red" />
       <FlatList
         keyExtractor={(item) => item}
         data={imageURLs}

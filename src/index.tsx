@@ -1,4 +1,8 @@
-import { ImageStyle, requireNativeComponent } from 'react-native';
+import {
+  ImageStyle,
+  requireNativeComponent,
+  NativeModules,
+} from 'react-native';
 
 export type IOSImageResizeMode =
   | 'fill'
@@ -104,3 +108,8 @@ const ComponentName = 'FasterImageView';
  * */
 export const FasterImageView =
   requireNativeComponent<FasterImageProps>(ComponentName);
+
+export const clearCache = () => {
+  const { FasterImageViewManager } = NativeModules;
+  FasterImageViewManager.clearCache();
+};

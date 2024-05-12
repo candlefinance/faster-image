@@ -1,13 +1,13 @@
 PODS:
   - boost (1.76.0)
   - DoubleConversion (1.1.6)
-  - FasterImage (1.5.1):
-    - FasterImage/Nuke (= 1.5.1)
-    - FasterImage/NukeUI (= 1.5.1)
+  - FasterImage (1.5.2):
+    - FasterImage/Nuke (= 1.5.2)
+    - FasterImage/NukeUI (= 1.5.2)
     - React-Core
-  - FasterImage/Nuke (1.5.1):
+  - FasterImage/Nuke (1.5.2):
     - React-Core
-  - FasterImage/NukeUI (1.5.1):
+  - FasterImage/NukeUI (1.5.2):
     - React-Core
   - FBLazyVector (0.71.17)
   - FBReactNativeSpec (0.71.17):
@@ -436,9 +436,9 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/ReactCommon/yoga"
 
 SPEC CHECKSUMS:
-  boost: 57d2868c099736d80fcd648bf211b4431e51a558
+  boost: 7dcd2de282d72e344012f7d6564d024930a6a440
   DoubleConversion: 5189b271737e1565bdce30deb4a08d647e3f5f54
-  FasterImage: 54be75240e08342f34bf4c37fa7c776f2e1d4dc0
+  FasterImage: 4242647a08a8d846bf81803f16d8e1b65dcdf82b
   FBLazyVector: 719c60593e0a5b54cba28d1e50250581efff79d2
   FBReactNativeSpec: 68ee46729de18aef10445dad3ed72915420041b5
   fmt: ff9d55029c625d3757ed641535fd4a75fedc7ce9
@@ -474,4 +474,4 @@ SPEC CHECKSUMS:
 
 PODFILE CHECKSUM: 949b735967dd6c64873d44a6244cb933a1eac03b
 
-COCOAPODS: 1.14.3
+COCOAPODS: 1.15.2
