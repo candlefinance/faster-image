@@ -8,4 +8,6 @@ RCT_EXPORT_VIEW_PROPERTY(onError, RCTDirectEventBlock)
 
 RCT_EXPORT_VIEW_PROPERTY(onSuccess, RCTDirectEventBlock)
 
+RCT_EXTERN_METHOD(clearCache)
+
 @end

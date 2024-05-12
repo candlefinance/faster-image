@@ -8,6 +8,12 @@ final class FasterImageViewManager: RCTViewManager {
     @objc override static func requiresMainQueueSetup() -> Bool {
         return true
     }
+
+    @objc func clearCache() {
+        ImagePipeline.shared.cache.removeAll()
+        ImageCache.shared.removeAll()
+        DataLoader.sharedUrlCache.removeAllCachedResponses()
+    }
 }
 
 struct ImageOptions: Decodable {
