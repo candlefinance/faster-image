@@ -103,8 +103,8 @@
             onSuccess = { result ->
               val event = Arguments.createMap()
               event.putString("source", url)
-              event.putString("height", view.height.toString())
-              event.putString("width", view.width.toString())
+              event.putString("height", result.intrinsicHeight.toString())
+              event.putString("width", result.intrinsicWidth.toString())
               val reactContext = view.context as ReactContext
               reactContext
                 .getJSModule(RCTEventEmitter::class.java)
