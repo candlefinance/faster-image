@@ -111,6 +111,11 @@ export const FasterImageView =
   requireNativeComponent<FasterImageProps>(ComponentName);
 
 export const clearCache = async () => {
-  const { FasterImageViewManager } = NativeModules;
-  return FasterImageViewManager.clearCache();
+  if (Platform.OS === 'ios') {
+    const { FasterImageViewManager } = NativeModules;
+    return FasterImageViewManager.clearCache();
+  } else {
+    const { FasterImageModule } = NativeModules;
+    return FasterImageModule.clearCache();
+  }
 };

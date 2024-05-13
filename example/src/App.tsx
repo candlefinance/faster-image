@@ -2,12 +2,12 @@ import * as React from 'react';
 
 import { FasterImageView, clearCache } from '@candlefinance/faster-image';
 import {
+  DevSettings,
   Dimensions,
   FlatList,
   Platform,
   SafeAreaView,
   StyleSheet,
-  DevSettings,
 } from 'react-native';
 
 const size = Dimensions.get('window').width / 3;
@@ -19,7 +19,7 @@ const imageURLs = Array.from(
 if (__DEV__ && Platform.OS === 'ios') {
   DevSettings.addMenuItem('Clear Cache', async () => {
     const result = await clearCache();
-    console.log(result);
+    console.log('cache cleared', result);
   });
 }
 
