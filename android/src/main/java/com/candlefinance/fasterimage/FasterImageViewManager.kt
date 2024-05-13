@@ -1,30 +1,31 @@
   package com.candlefinance.fasterimage
 
   import android.graphics.Bitmap
-  import android.graphics.BitmapFactory
-  import android.graphics.ColorMatrix
-  import android.graphics.ColorMatrixColorFilter
-  import android.graphics.Outline
-  import android.graphics.drawable.BitmapDrawable
-  import android.graphics.drawable.Drawable
-  import android.net.Uri
-  import android.util.Base64
-  import android.view.View
-  import android.view.ViewOutlineProvider
-  import android.widget.ImageView.ScaleType
-  import androidx.appcompat.widget.AppCompatImageView
+import android.graphics.BitmapFactory
+import android.graphics.ColorMatrix
+import android.graphics.ColorMatrixColorFilter
+import android.graphics.Outline
+import android.graphics.drawable.BitmapDrawable
+import android.graphics.drawable.Drawable
+import android.util.Base64
+import android.view.View
+import android.view.ViewOutlineProvider
+import android.widget.ImageView.ScaleType
+import androidx.appcompat.widget.AppCompatImageView
+  import coil.annotation.ExperimentalCoilApi
   import coil.imageLoader
-  import coil.request.CachePolicy
-  import coil.request.ImageRequest
-  import coil.size.Scale
-  import com.facebook.react.bridge.Arguments
-  import com.facebook.react.bridge.ReactContext
-  import com.facebook.react.bridge.ReadableMap
-  import com.facebook.react.uimanager.SimpleViewManager
-  import com.facebook.react.uimanager.ThemedReactContext
-  import com.facebook.react.uimanager.annotations.ReactProp
-  import com.facebook.react.uimanager.events.RCTEventEmitter
-  import okhttp3.Headers
+import coil.request.CachePolicy
+import coil.request.ImageRequest
+import coil.size.Scale
+import com.facebook.react.bridge.Arguments
+import com.facebook.react.bridge.Promise
+import com.facebook.react.bridge.ReactContext
+import com.facebook.react.bridge.ReactMethod
+import com.facebook.react.bridge.ReadableMap
+import com.facebook.react.uimanager.SimpleViewManager
+import com.facebook.react.uimanager.ThemedReactContext
+import com.facebook.react.uimanager.annotations.ReactProp
+import com.facebook.react.uimanager.events.RCTEventEmitter
 
 
   class FasterImageViewManager : SimpleViewManager<AppCompatImageView>() {
@@ -172,6 +173,15 @@
           intArray[i] = byteArray[i].toInt() and 0xFF
         }
         return intArray
+      }
+
+     @OptIn(ExperimentalCoilApi::class)
+     @ReactMethod
+      fun clearCache(view: AppCompatImageView, promise: Promise) {
+        val imageLoader = view.context.imageLoader
+       imageLoader.memoryCache?.clear()
+        imageLoader.diskCache?.clear()
+        promise.resolve(null)
       }
 
     companion object {
