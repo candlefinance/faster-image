@@ -9,10 +9,17 @@ final class FasterImageViewManager: RCTViewManager {
         return true
     }
 
-    @objc func clearCache() {
-        ImagePipeline.shared.cache.removeAll()
-        ImageCache.shared.removeAll()
-        DataLoader.sharedUrlCache.removeAllCachedResponses()
+    @objc(clearCache:rejecter:)
+    func clearCache(_ resolve: @escaping RCTPromiseResolveBlock,
+                     reject: RCTPromiseRejectBlock) {
+        DispatchQueue.global(qos: .userInteractive).async {
+            ImagePipeline.shared.cache.removeAll()
+            ImageCache.shared.removeAll()
+            DataLoader.sharedUrlCache.removeAllCachedResponses()
+            DispatchQueue.main.async {
+                resolve(true)
+            }
+        }
     }
 }
 

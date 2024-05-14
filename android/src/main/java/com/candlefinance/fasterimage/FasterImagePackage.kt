@@ -8,7 +8,7 @@ import com.facebook.react.uimanager.ViewManager
 
 class FasterImagePackage : ReactPackage {
   override fun createNativeModules(reactContext: ReactApplicationContext): List<NativeModule> {
-    return emptyList()
+    return listOf(FasterImageModule(reactContext))
   }
 
   override fun createViewManagers(reactContext: ReactApplicationContext): List<ViewManager<*, *>> {
