@@ -65,7 +65,7 @@ export default function App() {
               borderTopLeftRadius:
                 Platform.OS === 'android' ? size : (size - 16) / 2,
               borderBottomRightRadius:
-                Platform.OS === 'android' ? size : (size - 16) / 2,
+                Platform.OS === 'android' ? size / 1.5 : (size - 16) / 3,
               cachePolicy: 'discWithCacheControl',
               showActivityIndicator: true,
               base64Placeholder:
