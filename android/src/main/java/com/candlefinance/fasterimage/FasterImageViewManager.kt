@@ -5,6 +5,9 @@ import android.graphics.BitmapFactory
 import android.graphics.ColorMatrix
 import android.graphics.ColorMatrixColorFilter
 import android.graphics.Outline
+import android.graphics.Rect
+import android.graphics.RectF
+import android.graphics.Path
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 import android.util.Base64
@@ -28,6 +31,18 @@ import com.facebook.react.uimanager.SimpleViewManager
 import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.uimanager.annotations.ReactProp
 import com.facebook.react.uimanager.events.RCTEventEmitter
+
+  data class BorderRadii(
+    val uniform: Double,
+    val topLeft: Double,
+    val topRight: Double,
+    val bottomLeft: Double,
+    val bottomRight: Double,
+  ) {
+    fun sum(): Double {
+      return uniform + topLeft + topRight + bottomLeft + bottomRight;
+    }
+  }
 
   @Suppress("unused")
   class FasterImageModule(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(reactContext) {
@@ -72,15 +87,22 @@ import com.facebook.react.uimanager.events.RCTEventEmitter
         val thumbHash = options.getString("thumbhash")
         val resizeMode = options.getString("resizeMode")
         val transitionDuration = if (options.hasKey("transitionDuration")) options.getInt("transitionDuration") else 100
-        val borderRadius = if (options.hasKey("borderRadius")) options.getDouble("borderRadius") else 0.0
         val cachePolicy = options.getString("cachePolicy")
         val failureImage = options.getString("failureImage")
         val grayscale = if (options.hasKey("grayscale")) options.getDouble("grayscale") else 0.0
         val allowHardware = if (options.hasKey("allowHardware")) options.getBoolean("allowHardware") else true
        val headers = options.getMap("headers")
 
-        if (borderRadius != 0.0) {
-          setViewBorderRadius(view, borderRadius.toInt())
+        val borderRadii = BorderRadii(
+          uniform = if (options.hasKey("borderRadius")) options.getDouble("borderRadius") else 0.0,
+          topLeft = if (options.hasKey("borderTopLeftRadius")) options.getDouble("borderTopLeftRadius") else 0.0,
+          topRight = if (options.hasKey("borderTopRightRadius")) options.getDouble("borderTopRightRadius") else 0.0,
+          bottomLeft = if (options.hasKey("borderBottomLeftRadius")) options.getDouble("borderBottomLeftRadius") else 0.0,
+          bottomRight = if (options.hasKey("borderBottomRightRadius")) options.getDouble("borderBottomRightRadius") else 0.0,
+        )
+
+        if (borderRadii.sum() != 0.0) {
+          setViewBorderRadius(view, borderRadii)
         }
 
       if (RESIZE_MODE.containsKey(resizeMode)) {
@@ -160,11 +182,37 @@ import com.facebook.react.uimanager.events.RCTEventEmitter
           imageLoader.enqueue(request)
      }
 
-      private fun setViewBorderRadius(view: AppCompatImageView, borderRadius: Int) {
+      private fun setViewBorderRadius(view: AppCompatImageView, borderRadii: BorderRadii) {
         view.clipToOutline = true
         view.outlineProvider = object : ViewOutlineProvider() {
           override fun getOutline(view: View, outline: Outline) {
-            outline.setRoundRect(0, 0, view.width, view.height, borderRadius.toFloat())
+            val width = view.width
+            val height = view.height
+            val nonUniformRadiiSum = borderRadii.sum() - borderRadii.uniform
+
+            if (nonUniformRadiiSum == 0.0 || nonUniformRadiiSum == borderRadii.uniform) {
+              outline.setRoundRect(0, 0, width, height, borderRadii.uniform.toFloat())
+              return
+            }
+
+            val radii = floatArrayOf(
+              borderRadii.topLeft.toFloat(), borderRadii.topLeft.toFloat(),
+              borderRadii.topRight.toFloat(), borderRadii.topRight.toFloat(),
+              borderRadii.bottomRight.toFloat(), borderRadii.bottomRight.toFloat(),
+              borderRadii.bottomLeft.toFloat(), borderRadii.bottomLeft.toFloat(),
+            )
+
+            val rect = Rect(0, 0, width, height)
+
+            val path = Path().apply {
+              addRoundRect(
+                RectF(rect),
+                radii,
+                Path.Direction.CW
+              )
+            }
+
+            outline.setPath(path)
           }
         }
       }

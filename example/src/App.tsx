@@ -62,8 +62,10 @@ export default function App() {
             }}
             source={{
               transitionDuration: 0.3,
-              borderRadius:
-                Platform.OS === 'android' ? size * 2 : (size - 16) / 2,
+              borderTopLeftRadius:
+                Platform.OS === 'android' ? size : (size - 16) / 2,
+              borderBottomRightRadius:
+                Platform.OS === 'android' ? size : (size - 16) / 2,
               cachePolicy: 'discWithCacheControl',
               showActivityIndicator: true,
               base64Placeholder:
@@ -83,7 +85,8 @@ const styles = StyleSheet.create({
   image: {
     width: size - 16,
     height: size - 16,
-    borderRadius: (size - 16) / 2,
+    borderTopLeftRadius: (size - 16) / 2,
+    borderBottomRightRadius: (size - 16) / 2,
     overflow: 'hidden',
     backgroundColor: 'white',
   },
