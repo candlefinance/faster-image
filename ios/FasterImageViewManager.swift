@@ -34,9 +34,25 @@ struct ImageOptions: Decodable {
     let base64Placeholder: String?
     let progressiveLoadingEnabled: Bool?
     let borderRadius: Double?
+    let borderTopLeftRadius: Double?
+    let borderTopRightRadius: Double?
+    let borderBottomLeftRadius: Double?
+    let borderBottomRightRadius: Double?
     let url: String
     let headers: [String: String]?
     let grayscale: Double?
+}
+
+struct BorderRadii {
+  var uniform: Double = 0.0
+  var topLeft: Double = 0.0
+  var topRight: Double = 0.0
+  var bottomLeft: Double = 0.0
+  var bottomRight: Double = 0.0
+
+  func sum() -> Double {
+    return uniform + topLeft + topRight + bottomLeft + bottomRight
+  }
 }
 
 /// A wrapper around `LazyImageView` to make it compatible with React Native.
@@ -88,11 +104,15 @@ final class FasterImageView: UIView {
                 if let base64Placeholder = options.base64Placeholder {
                     self.base64Placeholder = base64Placeholder
                 }
-                if let borderRadius = options.borderRadius {
-                    lazyImageView.layer.cornerRadius = CGFloat(borderRadius)
-                    lazyImageView.layer.masksToBounds = true
-                    self.clipsToBounds = true
-                }
+
+                borderRadii = BorderRadii(
+                  uniform: options.borderRadius ?? 0.0,
+                  topLeft: options.borderTopLeftRadius ?? 0.0,
+                  topRight: options.borderTopRightRadius ?? 0.0,
+                  bottomLeft: options.borderBottomLeftRadius ?? 0.0,
+                  bottomRight: options.borderBottomRightRadius ?? 0.0
+                )
+
                 if let blurhash = options.blurhash {
                     self.blurhash = blurhash
                 }
@@ -127,6 +147,70 @@ final class FasterImageView: UIView {
                 ])
             }
         }
+    }
+
+    private func applyBorderRadii() {
+      let radiiSum = borderRadii.sum()
+
+      if radiiSum != 0.0 {
+        let nonUniformRadiiiSum = radiiSum - borderRadii.uniform
+
+        if nonUniformRadiiiSum == 0.0 || nonUniformRadiiiSum == borderRadii.uniform {
+            lazyImageView.layer.cornerRadius = CGFloat(borderRadii.uniform)
+        } else {
+            let path = UIBezierPath()
+            let bounds = lazyImageView.bounds
+
+            path.move(to: CGPoint(x: bounds.minX, y: bounds.minY + borderRadii.topLeft))
+            path.addArc(withCenter: CGPoint(x: bounds.minX + borderRadii.topLeft, y: bounds.minY + borderRadii.topLeft),
+                        radius: borderRadii.topLeft,
+                        startAngle: CGFloat.pi,
+                        endAngle: 3 * CGFloat.pi / 2,
+                        clockwise: true)
+
+            path.addLine(to: CGPoint(x: bounds.maxX - borderRadii.topRight, y: bounds.minY))
+            path.addArc(withCenter: CGPoint(x: bounds.maxX - borderRadii.topRight, y: bounds.minY + borderRadii.topRight),
+                        radius: borderRadii.topRight,
+                        startAngle: 3 * CGFloat.pi / 2,
+                        endAngle: 0,
+                        clockwise: true)
+
+            path.addLine(to: CGPoint(x: bounds.maxX, y: bounds.maxY - borderRadii.bottomRight))
+            path.addArc(withCenter: CGPoint(x: bounds.maxX - borderRadii.bottomRight, y: bounds.maxY - borderRadii.bottomRight),
+                        radius: borderRadii.bottomRight,
+                        startAngle: 0,
+                        endAngle: CGFloat.pi / 2,
+                        clockwise: true)
+
+            path.addLine(to: CGPoint(x: bounds.minX + borderRadii.bottomLeft, y: bounds.maxY))
+            path.addArc(withCenter: CGPoint(x: bounds.minX + borderRadii.bottomLeft, y: bounds.maxY - borderRadii.bottomLeft),
+                        radius: borderRadii.bottomLeft,
+                        startAngle: CGFloat.pi / 2,
+                        endAngle: CGFloat.pi,
+                        clockwise: true)
+
+            path.close()
+
+            let mask = CAShapeLayer()
+            mask.path = path.cgPath
+            lazyImageView.layer.mask = mask
+        }
+
+        lazyImageView.layer.masksToBounds = true
+        self.clipsToBounds = true
+      }
+    }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        applyBorderRadii()
+    }
+
+    var borderRadii = BorderRadii() {
+      didSet {
+        lazyImageView.setNeedsLayout()
+        applyBorderRadii()
+      }
     }
 
     var grayscale = 0.0 {

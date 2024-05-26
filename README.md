@@ -78,6 +78,10 @@ await clearCache();
 | cachePolicy               | string                 | memory                   | The cache policy of the image                                                                        |
 | transitionDuration        | number                 | 0.75 (iOS) Android (100) | The transition duration of the image                                                                 |
 | borderRadius              | number                 | 0                        | border radius of image                                                                               |
+| borderTopLeftRadius       | number                 | 0                        | top left border radius of image                                                                      |
+| borderTopRightRadius      | number                 | 0                        | top right border radius of image                                                                     |
+| borderBottomLeftRadius    | number                 | 0                        | bottom left border radius of image                                                                   |
+| borderBottomRightRadius   | number                 | 0                        | bottom right border radius of image                                                                  |
 | failureImage              | string                 |                          | If the image fails to download this will be set (blurhash, thumbhash, base64)                        |
 | progressiveLoadingEnabled | boolean                | false                    | Progressively load images (iOS only)                                                                 |
 | onError                   | function               |                          | The function to call when an error occurs. The error is passed as the first argument of the function |
