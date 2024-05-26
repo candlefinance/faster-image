@@ -160,7 +160,7 @@ extension PlatformImage {
 
 private extension CGContext {
     static func make(_ image: CGImage, size: CGSize, alphaInfo: CGImageAlphaInfo? = nil) -> CGContext? {
-        let alphaInfo: CGImageAlphaInfo = alphaInfo ?? (image.isOpaque ? .noneSkipLast : .premultipliedLast)
+        let alphaInfo: CGImageAlphaInfo = alphaInfo ?? preferredAlphaInfo(for: image)
 
         // Create the context which matches the input image.
         if let ctx = CGContext(
@@ -188,6 +188,17 @@ private extension CGContext {
             space: CGColorSpaceCreateDeviceRGB(),
             bitmapInfo: alphaInfo.rawValue
         )
+    }
+
+    /// - See https://developer.apple.com/library/archive/documentation/GraphicsImaging/Conceptual/drawingwithquartz2d/dq_context/dq_context.html#//apple_ref/doc/uid/TP30001066-CH203-BCIBHHBB
+    private static func preferredAlphaInfo(for image: CGImage) -> CGImageAlphaInfo {
+        guard image.isOpaque else {
+            return .premultipliedLast
+        }
+        if image.bitsPerPixel == 8 {
+            return .none // The only pixel format supported for grayscale CS
+        }
+        return .noneSkipLast
     }
 }
 
@@ -314,11 +325,10 @@ extension CGSize {
     }
 }
 
-@MainActor
 enum Screen {
 #if os(iOS) || os(tvOS)
     /// Returns the current screen scale.
-    static let scale: CGFloat = UIScreen.main.scale
+    static let scale: CGFloat = UITraitCollection.current.displayScale
 #elseif os(watchOS)
     /// Returns the current screen scale.
     static let scale: CGFloat = WKInterfaceDevice.current().screenScale
