@@ -17,28 +17,26 @@ import AppKit
 public final class ImagePipeline: @unchecked Sendable {
     /// Returns the shared image pipeline.
     public static var shared: ImagePipeline {
-        get { _shared }
-        set { _shared = newValue }
+        get { _shared.value }
+        set { _shared.value = newValue }
     }
 
-    @Atomic
-    private static var _shared = ImagePipeline(configuration: .withURLCache)
+    private static let _shared = Atomic(value: ImagePipeline(configuration: .withURLCache))
 
     /// The pipeline configuration.
     public let configuration: Configuration
 
     /// Provides access to the underlying caching subsystems.
-    public var cache: ImagePipeline.Cache { ImagePipeline.Cache(pipeline: self) }
+    public var cache: ImagePipeline.Cache { .init(pipeline: self) }
 
     let delegate: any ImagePipelineDelegate
 
     private var tasks = [ImageTask: TaskSubscription]()
 
-    private let tasksLoadData: TaskPool<ImageLoadKey, (Data, URLResponse?), Error>
-    private let tasksLoadImage: TaskPool<ImageLoadKey, ImageResponse, Error>
-    private let tasksFetchDecodedImage: TaskPool<DecodedImageLoadKey, ImageResponse, Error>
-    private let tasksFetchOriginalImageData: TaskPool<DataLoadKey, (Data, URLResponse?), Error>
-    private let tasksProcessImage: TaskPool<ImageProcessingKey, ImageResponse, Swift.Error>
+    private let tasksLoadData: TaskPool<TaskLoadImageKey, ImageResponse, Error>
+    private let tasksLoadImage: TaskPool<TaskLoadImageKey, ImageResponse, Error>
+    private let tasksFetchOriginalImage: TaskPool<TaskFetchOriginalImageKey, ImageResponse, Error>
+    private let tasksFetchOriginalData: TaskPool<TaskFetchOriginalDataKey, (Data, URLResponse?), Error>
 
     // The queue on which the entire subsystem is synchronized.
     let queue = DispatchQueue(label: "com.github.kean.Nuke.ImagePipeline", qos: .userInitiated)
@@ -55,6 +53,7 @@ public final class ImagePipeline: @unchecked Sendable {
 
     let rateLimiter: RateLimiter?
     let id = UUID()
+    var onTaskStarted: ((ImageTask) -> Void)? // Debug purposes
 
     deinit {
         lock.deinitialize(count: 1)
@@ -77,9 +76,8 @@ public final class ImagePipeline: @unchecked Sendable {
         let isCoalescingEnabled = configuration.isTaskCoalescingEnabled
         self.tasksLoadData = TaskPool(isCoalescingEnabled)
         self.tasksLoadImage = TaskPool(isCoalescingEnabled)
-        self.tasksFetchDecodedImage = TaskPool(isCoalescingEnabled)
-        self.tasksFetchOriginalImageData = TaskPool(isCoalescingEnabled)
-        self.tasksProcessImage = TaskPool(isCoalescingEnabled)
+        self.tasksFetchOriginalImage = TaskPool(isCoalescingEnabled)
+        self.tasksFetchOriginalData = TaskPool(isCoalescingEnabled)
 
         self.lock = .allocate(capacity: 1)
         self.lock.initialize(to: os_unfair_lock())
@@ -113,112 +111,45 @@ public final class ImagePipeline: @unchecked Sendable {
         queue.async {
             guard !self.isInvalidated else { return }
             self.isInvalidated = true
-            self.tasks.keys.forEach { self.cancel($0) }
+            self.tasks.keys.forEach(self.cancelImageTask)
         }
     }
 
     // MARK: - Loading Images (Async/Await)
 
     /// Creates a task with the given URL.
-    public func imageTask(with url: URL) -> AsyncImageTask {
+    ///
+    /// The task starts executing the moment it is created.
+    public func imageTask(with url: URL) -> ImageTask {
         imageTask(with: ImageRequest(url: url))
     }
 
     /// Creates a task with the given request.
-    public func imageTask(with request: ImageRequest) -> AsyncImageTask {
-        let imageTask = makeImageTask(request: request, queue: queue)
-        delegate.imageTaskCreated(imageTask, pipeline: self)
-        let context = AsyncTaskContext()
-        let task = Task<ImageResponse, Swift.Error> {
-            try await self.image(for: imageTask, context: context)
-        }
-        let progress = AsyncStream<ImageTask.Progress> { context.progress = $0 }
-        let previews = AsyncStream<ImageResponse> { context.previews = $0 }
-        return AsyncImageTask(imageTask: imageTask, task: task, progress: progress, previews: previews)
+    ///
+    /// The task starts executing the moment it is created.
+    public func imageTask(with request: ImageRequest) -> ImageTask {
+        makeStartedImageTask(with: request)
     }
 
     /// Returns an image for the given URL.
-    ///
-    /// - parameters:
-    ///   - request: An image URL.
     public func image(for url: URL) async throws -> PlatformImage {
         try await image(for: ImageRequest(url: url))
     }
 
     /// Returns an image for the given request.
-    ///
-    /// - parameters:
-    ///   - request: An image request.
     public func image(for request: ImageRequest) async throws -> PlatformImage {
-        // Optimization: fetch image directly without creating an associated task
-        let task = makeImageTask(request: request, queue: queue)
-        delegate.imageTaskCreated(task, pipeline: self)
-        return try await image(for: task).image
-    }
-
-    private func image(for task: ImageTask, context: AsyncTaskContext? = nil) async throws -> ImageResponse {
-        try await withTaskCancellationHandler(operation: {
-            try await withUnsafeThrowingContinuation { continuation in
-                self.queue.async {
-                    guard task.state != .cancelled else {
-                        return continuation.resume(throwing: CancellationError())
-                    }
-                    task.onCancel = {
-                        context?.progress?.finish()
-                        context?.previews?.finish()
-                        continuation.resume(throwing: CancellationError())
-                    }
-                    self.startImageTask(task, progress: { response, progress in
-                        if let response {
-                            context?.previews?.yield(response)
-                        } else {
-                            context?.progress?.yield(progress)
-                        }
-                    }, completion: { result in
-                        context?.progress?.finish()
-                        context?.previews?.finish()
-                        continuation.resume(with: result)
-                    })
-                }
-            }
-        }, onCancel: {
-            task.cancel()
-        })
+        try await imageTask(with: request).image
     }
 
     // MARK: - Loading Data (Async/Await)
 
-    /// Returns image data for the given URL.
-    ///
-    /// - parameter request: An image request.
-    @discardableResult
-    public func data(for url: URL) async throws -> (Data, URLResponse?) {
-        try await data(for: ImageRequest(url: url))
-    }
-
     /// Returns image data for the given request.
     ///
     /// - parameter request: An image request.
-    @discardableResult
     public func data(for request: ImageRequest) async throws -> (Data, URLResponse?) {
-        let task = makeImageTask(request: request, queue: nil, isDataTask: true)
-        return try await withTaskCancellationHandler(operation: {
-            try await withUnsafeThrowingContinuation { continuation in
-                self.queue.async {
-                    guard task.state != .cancelled else {
-                        return continuation.resume(throwing: CancellationError())
-                    }
-                    task.onCancel = {
-                        continuation.resume(throwing: CancellationError())
-                    }
-                    self.startDataTask(task, progress: nil) { result in
-                        continuation.resume(with: result.map { $0 })
-                    }
-                }
-            }
-        }, onCancel: {
-            task.cancel()
-        })
+        let task = makeStartedImageTask(with: request, isDataTask: true)
+        let response = try await task.response
+        return (response.container.data ?? Data(), response.urlResponse)
     }
 
     // MARK: - Loading Images (Closures)
@@ -265,106 +196,48 @@ public final class ImagePipeline: @unchecked Sendable {
         progress: ((_ response: ImageResponse?, _ completed: Int64, _ total: Int64) -> Void)?,
         completion: @escaping (_ result: Result<ImageResponse, Error>) -> Void
     ) -> ImageTask {
-        loadImage(with: request, isConfined: false, queue: queue, progress: {
+        loadImage(with: request, queue: queue, progress: {
             progress?($0, $1.completed, $1.total)
         }, completion: completion)
     }
 
     func loadImage(
         with request: ImageRequest,
-        isConfined: Bool,
+        isDataTask: Bool = false,
         queue callbackQueue: DispatchQueue?,
         progress: ((ImageResponse?, ImageTask.Progress) -> Void)?,
         completion: @escaping (Result<ImageResponse, Error>) -> Void
     ) -> ImageTask {
-        let task = makeImageTask(request: request, queue: callbackQueue)
-        delegate.imageTaskCreated(task, pipeline: self)
-        @Sendable func start() {
-            startImageTask(task, progress: progress, completion: completion)
-        }
-        if isConfined {
-            start()
-        } else {
-            self.queue.async { start() }
-        }
-        return task
-    }
-
-    private func startImageTask(
-        _ task: ImageTask,
-        progress progressHandler: ((ImageResponse?, ImageTask.Progress) -> Void)?,
-        completion: @escaping (Result<ImageResponse, Error>) -> Void
-    ) {
-        guard !isInvalidated else {
-            dispatchCallback(to: task.callbackQueue) {
-                let error = Error.pipelineInvalidated
-                self.delegate.imageTask(task, didCompleteWithResult: .failure(error), pipeline: self)
-                completion(.failure(error))
+        makeStartedImageTask(with: request, isDataTask: isDataTask) { [weak self] event, task in
+            self?.dispatchCallback(to: callbackQueue) {
+                // The callback-based API guarantees that after cancellation no
+                // event are called on the callback queue.
+                guard task.state != .cancelled else { return }
+                switch event {
+                case .progress(let value): progress?(nil, value)
+                case .preview(let response): progress?(response, task.currentProgress)
+                case .cancelled: break // The legacy APIs do not send cancellation events
+                case .finished(let result):
+                    _ = task._setState(.completed) // Important to do it on the callback queue
+                    completion(result)
+                }
             }
-            return
-        }
-
-        delegate.imageTaskDidStart(task, pipeline: self)
-
-        tasks[task] = makeTaskLoadImage(for: task.request)
-            .subscribe(priority: task.priority.taskPriority, subscriber: task) { [weak self, weak task] event in
-                guard let self, let task else { return }
-
-                if event.isCompleted {
-                    self.tasks[task] = nil
-                }
-
-                self.dispatchCallback(to: task.callbackQueue) {
-                    guard task.state != .cancelled else { return }
-                    if event.isCompleted {
-                        task.didComplete() // Important: called on callback queue and in this order
-                    }
-                    switch event {
-                    case let .value(response, isCompleted):
-                        if isCompleted {
-                            self.delegate.imageTask(task, didCompleteWithResult: .success(response), pipeline: self)
-                            completion(.success(response))
-                        } else {
-                            self.delegate.imageTask(task, didReceivePreview: response, pipeline: self)
-                            progressHandler?(response, task.progress)
-                        }
-                    case let .progress(progress):
-                        self.delegate.imageTask(task, didUpdateProgress: progress, pipeline: self)
-                        task.progress = progress
-                        progressHandler?(nil, progress)
-                    case let .error(error):
-                        self.delegate.imageTask(task, didCompleteWithResult: .failure(error), pipeline: self)
-                        completion(.failure(error))
-                    }
-                }
         }
     }
 
-    private func makeImageTask(request: ImageRequest, queue: DispatchQueue?, isDataTask: Bool = false) -> ImageTask {
-        let task = ImageTask(taskId: nextTaskId, request: request)
-        task.pipeline = self
-        task.callbackQueue = queue
-        task.isDataTask = isDataTask
-        return task
+    private func dispatchCallback(to callbackQueue: DispatchQueue?, _ closure: @escaping () -> Void) {
+        if callbackQueue === self.queue {
+            closure()
+        } else {
+            (callbackQueue ?? self.configuration.callbackQueue).async(execute: closure)
+        }
     }
 
     // MARK: - Loading Data (Closures)
 
     /// Loads image data for the given request. The data doesn't get decoded
     /// or processed in any other way.
-    @discardableResult public func loadData(
-        with url: URL,
-        completion: @escaping (Result<(data: Data, response: URLResponse?), Error>) -> Void
-    ) -> ImageTask {
-        loadData(with: ImageRequest(url: url), queue: nil, progress: nil, completion: completion)
-    }
-
-    /// Loads image data for the given request. The data doesn't get decoded
-    /// or processed in any other way.
-    @discardableResult public func loadData(
-        with request: ImageRequest,
-        completion: @escaping (Result<(data: Data, response: URLResponse?), Error>) -> Void
-    ) -> ImageTask {
+    @discardableResult public func loadData(with request: ImageRequest, completion: @escaping (Result<(data: Data, response: URLResponse?), Error>) -> Void) -> ImageTask {
         loadData(with: request, queue: nil, progress: nil, completion: completion)
     }
 
@@ -384,71 +257,18 @@ public final class ImagePipeline: @unchecked Sendable {
     @discardableResult public func loadData(
         with request: ImageRequest,
         queue: DispatchQueue? = nil,
-        progress: ((_ completed: Int64, _ total: Int64) -> Void)?,
-        completion: @escaping (Result<(data: Data, response: URLResponse?), Error>) -> Void
-    ) -> ImageTask {
-        loadData(with: request, isConfined: false, queue: queue, progress: progress, completion: completion)
-    }
-
-    func loadData(
-        with request: ImageRequest,
-        isConfined: Bool,
-        queue: DispatchQueue?,
-        progress: ((_ completed: Int64, _ total: Int64) -> Void)?,
-        completion: @escaping (Result<(data: Data, response: URLResponse?), Error>) -> Void
-    ) -> ImageTask {
-        let task = makeImageTask(request: request, queue: queue, isDataTask: true)
-        @Sendable func start() {
-            startDataTask(task, progress: progress, completion: completion)
-        }
-        if isConfined {
-            start()
-        } else {
-            self.queue.async { start() }
-        }
-        return task
-    }
-
-    private func startDataTask(
-        _ task: ImageTask,
         progress progressHandler: ((_ completed: Int64, _ total: Int64) -> Void)?,
         completion: @escaping (Result<(data: Data, response: URLResponse?), Error>) -> Void
-    ) {
-        guard !isInvalidated else {
-            dispatchCallback(to: task.callbackQueue) {
-                let error = Error.pipelineInvalidated
-                self.delegate.imageTask(task, didCompleteWithResult: .failure(error), pipeline: self)
-                completion(.failure(error))
+    ) -> ImageTask {
+        loadImage(with: request, isDataTask: true, queue: queue) { _, progress in
+            progressHandler?(progress.completed, progress.total)
+        } completion: { result in
+            let result = result.map { response in
+                // Data should never be empty
+                (data: response.container.data ?? Data(), response: response.urlResponse)
             }
-            return
+            completion(result)
         }
-
-        tasks[task] = makeTaskLoadData(for: task.request)
-            .subscribe(priority: task.priority.taskPriority, subscriber: task) { [weak self, weak task] event in
-                guard let self, let task else { return }
-
-                if event.isCompleted {
-                    self.tasks[task] = nil
-                }
-
-                self.dispatchCallback(to: task.callbackQueue) {
-                    guard task.state != .cancelled else { return }
-                    if event.isCompleted {
-                        task.didComplete() // Important: called on callback queue and in this order
-                    }
-                    switch event {
-                    case let .value(response, isCompleted):
-                        if isCompleted {
-                            completion(.success(response))
-                        }
-                    case let .progress(progress):
-                        task.progress = progress
-                        progressHandler?(progress.completed, progress.total)
-                    case let .error(error):
-                        completion(.failure(error))
-                    }
-                }
-            }
     }
 
     // MARK: - Loading Images (Combine)
@@ -463,23 +283,53 @@ public final class ImagePipeline: @unchecked Sendable {
         ImagePublisher(request: request, pipeline: self).eraseToAnyPublisher()
     }
 
+    // MARK: - ImageTask (Internal)
+
+    private func makeStartedImageTask(with request: ImageRequest, isDataTask: Bool = false, onEvent: ((ImageTask.Event, ImageTask) -> Void)? = nil) -> ImageTask {
+        let task = ImageTask(taskId: nextTaskId, request: request, isDataTask: isDataTask, pipeline: self, onEvent: onEvent)
+        // Important to call it before `imageTaskStartCalled`
+        if !isDataTask {
+            delegate.imageTaskCreated(task, pipeline: self)
+        }
+        task._task = Task {
+            try await withUnsafeThrowingContinuation { continuation in
+                self.queue.async {
+                    task._continuation = continuation
+                    self.startImageTask(task, isDataTask: isDataTask)
+                }
+            }
+        }
+        return task
+    }
+
+    // By this time, the task has `continuation` set and is fully wired.
+    private func startImageTask(_ task: ImageTask, isDataTask: Bool) {
+        guard task._state != .cancelled else {
+            // The task gets started asynchronously in a `Task` and cancellation
+            // can happen before the pipeline reached `startImageTask`. In that
+            // case, the `cancel` method do no send the task event.
+            return task._dispatch(.cancelled)
+        }
+        guard !isInvalidated else {
+            return task._process(.error(.pipelineInvalidated))
+        }
+        let worker = isDataTask ? makeTaskLoadData(for: task.request) : makeTaskLoadImage(for: task.request)
+        tasks[task] = worker.subscribe(priority: task.priority.taskPriority, subscriber: task) { [weak task] in
+            task?._process($0)
+        }
+        delegate.imageTaskDidStart(task, pipeline: self)
+        onTaskStarted?(task)
+    }
+
+    private func cancelImageTask(_ task: ImageTask) {
+        tasks.removeValue(forKey: task)?.unsubscribe()
+        task._cancel()
+    }
+
     // MARK: - Image Task Events
 
     func imageTaskCancelCalled(_ task: ImageTask) {
-        queue.async {
-            self.cancel(task)
-        }
-    }
-
-    private func cancel(_ task: ImageTask) {
-        guard let subscription = tasks.removeValue(forKey: task) else { return }
-        dispatchCallback(to: task.callbackQueue) {
-            if !task.isDataTask {
-                self.delegate.imageTaskDidCancel(task, pipeline: self)
-            }
-            task.onCancel?() // Order is important
-        }
-        subscription.unsubscribe()
+        queue.async { self.cancelImageTask(task) }
     }
 
     func imageTaskUpdatePriorityCalled(_ task: ImageTask, priority: ImageRequest.Priority) {
@@ -488,11 +338,25 @@ public final class ImagePipeline: @unchecked Sendable {
         }
     }
 
-    private func dispatchCallback(to callbackQueue: DispatchQueue?, _ closure: @escaping () -> Void) {
-        if callbackQueue === self.queue {
-            closure()
-        } else {
-            (callbackQueue ?? self.configuration.callbackQueue).async(execute: closure)
+    func imageTask(_ task: ImageTask, didProcessEvent event: ImageTask.Event, isDataTask: Bool) {
+        switch event {
+        case .cancelled, .finished:
+            tasks[task] = nil
+        default: break
+        }
+
+        if !isDataTask {
+            delegate.imageTask(task, didReceiveEvent: event, pipeline: self)
+            switch event {
+            case .progress(let progress):
+                delegate.imageTask(task, didUpdateProgress: progress, pipeline: self)
+            case .preview(let response):
+                delegate.imageTask(task, didReceivePreview: response, pipeline: self)
+            case .cancelled:
+                delegate.imageTaskDidCancel(task, pipeline: self)
+            case .finished(let result):
+                delegate.imageTask(task, didCompleteWithResult: result, pipeline: self)
+            }
         }
     }
 
@@ -503,12 +367,11 @@ public final class ImagePipeline: @unchecked Sendable {
     //
     // `loadImage()` call is represented by TaskLoadImage:
     //
-    // TaskLoadImage -> TaskFetchDecodedImage -> TaskFetchOriginalImageData
-    //               -> TaskProcessImage
+    // TaskLoadImage -> TaskFetchOriginalImage -> TaskFetchOriginalData
     //
     // `loadData()` call is represented by TaskLoadData:
     //
-    // TaskLoadData -> TaskFetchOriginalImageData
+    // TaskLoadData -> TaskFetchOriginalData
     //
     //
     // Each task represents a resource or a piece of work required to produce the
@@ -518,34 +381,40 @@ public final class ImagePipeline: @unchecked Sendable {
     // is created. The work is split between tasks to minimize any duplicated work.
 
     func makeTaskLoadImage(for request: ImageRequest) -> AsyncTask<ImageResponse, Error>.Publisher {
-        tasksLoadImage.publisherForKey(request.makeImageLoadKey()) {
+        tasksLoadImage.publisherForKey(TaskLoadImageKey(request)) {
             TaskLoadImage(self, request)
         }
     }
 
-    func makeTaskLoadData(for request: ImageRequest) -> AsyncTask<(Data, URLResponse?), Error>.Publisher {
-        tasksLoadData.publisherForKey(request.makeImageLoadKey()) {
+    func makeTaskLoadData(for request: ImageRequest) -> AsyncTask<ImageResponse, Error>.Publisher {
+        tasksLoadData.publisherForKey(TaskLoadImageKey(request)) {
             TaskLoadData(self, request)
         }
     }
 
-    func makeTaskProcessImage(key: ImageProcessingKey, process: @escaping () throws -> ImageResponse) -> AsyncTask<ImageResponse, Swift.Error>.Publisher {
-        tasksProcessImage.publisherForKey(key) {
-            OperationTask(self, configuration.imageProcessingQueue, process)
+    func makeTaskFetchOriginalImage(for request: ImageRequest) -> AsyncTask<ImageResponse, Error>.Publisher {
+        tasksFetchOriginalImage.publisherForKey(TaskFetchOriginalImageKey(request)) {
+            TaskFetchOriginalImage(self, request)
         }
     }
 
-    func makeTaskFetchDecodedImage(for request: ImageRequest) -> AsyncTask<ImageResponse, Error>.Publisher {
-        tasksFetchDecodedImage.publisherForKey(request.makeDecodedImageLoadKey()) {
-            TaskFetchDecodedImage(self, request)
+    func makeTaskFetchOriginalData(for request: ImageRequest) -> AsyncTask<(Data, URLResponse?), Error>.Publisher {
+        tasksFetchOriginalData.publisherForKey(TaskFetchOriginalDataKey(request)) {
+            request.publisher == nil ? TaskFetchOriginalData(self, request) : TaskFetchWithPublisher(self, request)
         }
     }
 
-    func makeTaskFetchOriginalImageData(for request: ImageRequest) -> AsyncTask<(Data, URLResponse?), Error>.Publisher {
-        tasksFetchOriginalImageData.publisherForKey(request.makeDataLoadKey()) {
-            request.publisher == nil ?
-                TaskFetchOriginalImageData(self, request) :
-                TaskFetchWithPublisher(self, request)
-        }
+    // MARK: - Deprecated
+
+    // Deprecated in Nuke 12.7
+    @available(*, deprecated, message: "Please the variant variant that accepts `ImageRequest` as a parameter")
+    @discardableResult public func loadData(with url: URL, completion: @escaping (Result<(data: Data, response: URLResponse?), Error>) -> Void) -> ImageTask {
+        loadData(with: ImageRequest(url: url), queue: nil, progress: nil, completion: completion)
+    }
+
+    // Deprecated in Nuke 12.7
+    @available(*, deprecated, message: "Please the variant that accepts `ImageRequest` as a parameter")
+    @discardableResult public func data(for url: URL) async throws -> (Data, URLResponse?) {
+        try await data(for: ImageRequest(url: url))
     }
 }

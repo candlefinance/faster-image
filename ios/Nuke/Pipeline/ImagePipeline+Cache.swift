@@ -200,7 +200,7 @@ extension ImagePipeline.Cache {
         if let customKey = pipeline.delegate.cacheKey(for: request, pipeline: pipeline) {
             return customKey
         }
-        return request.makeDataCacheKey() // Use the default key
+        return "\(request.preferredImageId)\(request.thumbnail?.identifier ?? "")\(ImageProcessors.Composition(request.processors).identifier)"
     }
 
     // MARK: Misc
@@ -222,7 +222,7 @@ extension ImagePipeline.Cache {
     // MARK: Private
 
     private func decodeImageData(_ data: Data, for request: ImageRequest) -> ImageContainer? {
-        let context = ImageDecodingContext(request: request, data: data, isCompleted: true, urlResponse: nil, cacheType: .disk)
+        let context = ImageDecodingContext(request: request, data: data, cacheType: .disk)
         guard let decoder = pipeline.delegate.imageDecoder(for: context, pipeline: pipeline) else {
             return nil
         }

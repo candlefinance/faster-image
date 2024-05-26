@@ -6,16 +6,26 @@ import Foundation
 
 /// Fetches original image from the data loader (`DataLoading`) and stores it
 /// in the disk cache (`DataCaching`).
-final class TaskFetchOriginalImageData: ImagePipelineTask<(Data, URLResponse?)> {
+final class TaskFetchOriginalData: AsyncPipelineTask<(Data, URLResponse?)> {
     private var urlResponse: URLResponse?
     private var resumableData: ResumableData?
     private var resumedDataCount: Int64 = 0
     private var data = Data()
 
     override func start() {
-        guard let urlRequest = request.urlRequest else {
+        guard let urlRequest = request.urlRequest, let url = urlRequest.url else {
             // A malformed URL prevented a URL request from being initiated.
             send(error: .dataLoadingFailed(error: URLError(.badURL)))
+            return
+        }
+
+        if url.isLocalResource && pipeline.configuration.isLocalResourcesSupportEnabled {
+            do {
+                let data = try Data(contentsOf: url)
+                send(value: (data, nil), isCompleted: true)
+            } catch {
+                send(error: .dataLoadingFailed(error: error))
+            }
             return
         }
 
@@ -157,8 +167,9 @@ final class TaskFetchOriginalImageData: ImagePipelineTask<(Data, URLResponse?)> 
     }
 }
 
-extension ImagePipelineTask where Value == (Data, URLResponse?) {
+extension AsyncPipelineTask where Value == (Data, URLResponse?) {
     func storeDataInCacheIfNeeded(_ data: Data) {
+        let request = makeSanitizedRequest()
         guard let dataCache = pipeline.delegate.dataCache(for: request, pipeline: pipeline), shouldStoreDataInDiskCache() else {
             return
         }
@@ -170,7 +181,17 @@ extension ImagePipelineTask where Value == (Data, URLResponse?) {
         }
     }
 
+    /// Returns a request that doesn't contain any information non-related
+    /// to data loading.
+    private func makeSanitizedRequest() -> ImageRequest {
+        var request = request
+        request.processors = []
+        request.userInfo[.thumbnailKey] = nil
+        return request
+    }
+
     private func shouldStoreDataInDiskCache() -> Bool {
+        let imageTasks = imageTasks
         guard imageTasks.contains(where: { !$0.request.options.contains(.disableDiskCacheWrites) }) else {
             return false
         }
