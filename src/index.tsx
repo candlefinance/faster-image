@@ -3,6 +3,7 @@ import {
   requireNativeComponent,
   NativeModules,
   Platform,
+  ColorValue,
 } from 'react-native';
 
 export type IOSImageResizeMode =
@@ -34,6 +35,7 @@ export type AndroidImageResizeMode =
  * @property {string} [thumbhash] - Thumbhash of the image (base64 encoded) (iOS only)
  * @property {('cover' | 'contain' | 'center' | 'fill')} [resizeMode] - Resize mode of the image
  * @property {boolean} [showActivityIndicator] - Show activity indicator while loading, overrides placeholder. Defaults to false (iOS only)
+ * @property {ColorValue} [activityColor] - Activity indicator color. Changed default activity indicator color if specified. Defaults to undefined (iOS only)
  * @property {number} [transitionDuration] - Duration of the transition animation in seconds, defaults to 0.75
  * @property {string} [failureImage] - Image to show when the image fails to load, pass blurhash, thumbhash or base64 encoded image
  * @property {boolean} [progressiveLoadingEnabled] - Enable progressive loading, defaults to false
@@ -58,6 +60,7 @@ export type ImageOptions = {
   borderBottomLeftRadius?: number;
   borderBottomRightRadius?: number;
   showActivityIndicator?: boolean;
+  activityColor?: ColorValue;
   transitionDuration?: number;
   cachePolicy?: 'memory' | 'discWithCacheControl' | 'discNoCacheControl';
   failureImage?: string;
