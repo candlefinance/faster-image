@@ -34,6 +34,11 @@ A performant way to render images in React Native with a focus on speed and memo
 - [x] Typescript support
 - [x] Written in Swift/Kotlin
 
+## To be added
+
+- [ ] GIF support
+
+
 ## Installation
 
 ```sh
