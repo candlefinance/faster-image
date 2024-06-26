@@ -1,6 +1,6 @@
   package com.candlefinance.fasterimage
 
-  import android.graphics.Bitmap
+import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.ColorMatrix
 import android.graphics.ColorMatrixColorFilter
@@ -10,6 +10,7 @@ import android.graphics.RectF
 import android.graphics.Path
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
+import android.os.Build
 import android.util.Base64
 import android.view.View
 import android.view.ViewOutlineProvider
@@ -132,7 +133,7 @@ import com.facebook.react.uimanager.events.RCTEventEmitter
          }
        }
 
-       val imageLoader = view.context.imageLoader
+       val imageLoader = view.context.imageLoader;
        val request = requestBuilder
           .target(
             onStart = { placeholder ->
@@ -212,7 +213,11 @@ import com.facebook.react.uimanager.events.RCTEventEmitter
               )
             }
 
-            outline.setPath(path)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+              outline.setPath(path)
+            } else {
+              outline.setRoundRect(rect, borderRadii.sum().toFloat())
+            }
           }
         }
       }
