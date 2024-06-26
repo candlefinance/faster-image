@@ -81,7 +81,7 @@ export type ImageOptions = {
  * @property {(result: { nativeEvent: { width: number; height: number; source: string; } }) => void} [onSuccess] - Callback for when the image loads successfully
  * */
 export type FasterImageProps = {
-  style: ImageStyle;
+  style: ImageStyle | ImageStyle[];
   source: ImageOptions;
   onError?: (result: { nativeEvent: { error: string } }) => void;
   onSuccess?: (result: {
