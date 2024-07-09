@@ -54,8 +54,11 @@
   "devDependencies": {
     "@commitlint/config-conventional": "^19.1.0",
     "@evilmartians/lefthook": "^1.6.7",
+    "@react-native/babel-preset": "^0.74.85",
     "@react-native/eslint-config": "^0.73.2",
     "@release-it/conventional-changelog": "^8.0.1",
+    "@testing-library/jest-native": "^5.4.3",
+    "@testing-library/react-native": "^12.5.1",
     "@types/jest": "^29.5.12",
     "@types/react": "18.2.73",
     "commitlint": "^19.2.1",
@@ -69,6 +72,7 @@
     "react": "18.2.0",
     "react-native": "0.73.6",
     "react-native-builder-bob": "^0.23.2",
+    "react-test-renderer": "^18.3.1",
     "release-it": "^17.1.1",
     "typescript": "^5.4.3"
   },
@@ -84,6 +88,12 @@
     "modulePathIgnorePatterns": [
       "<rootDir>/example/node_modules",
       "<rootDir>/lib/"
+    ],
+    "setupFilesAfterEnv": [
+      "<rootDir>/src/__tests__/setup.jest.ts"
+    ],
+    "testPathIgnorePatterns": [
+      "<rootDir>/src/__tests__/setup.jest.ts"
     ]
   },
   "commitlint": {
