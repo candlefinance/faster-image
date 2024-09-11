@@ -86,6 +86,7 @@ import com.facebook.react.uimanager.events.RCTEventEmitter
         val url = options.getString("url")
         val base64Placeholder = options.getString("base64Placeholder")
         val thumbHash = options.getString("thumbhash")
+        val blurHash = options.getString("blurhash")
         val resizeMode = options.getString("resizeMode")
         val transitionDuration = if (options.hasKey("transitionDuration")) options.getInt("transitionDuration") else 100
         val cachePolicy = options.getString("cachePolicy")
@@ -115,6 +116,7 @@ import com.facebook.react.uimanager.events.RCTEventEmitter
        val drawablePlaceholder: Drawable? = base64Placeholder?.let { getDrawableFromBase64(it, view) }
        val failureDrawable: Drawable? = failureImage?.let { getDrawableFromBase64(it, view) }
        val thumbHashDrawable = thumbHash?.let { makeThumbHash(view, it) }
+       val blurHashDrawable = blurHash?.let { makeBlurHash(view, it) }
 
        var requestBuilder = ImageRequest.Builder(view.context)
        // Handle base64 image sources
@@ -172,7 +174,7 @@ import com.facebook.react.uimanager.events.RCTEventEmitter
             }
           )
           .crossfade(transitionDuration.toInt() ?: 100)
-          .placeholder(drawablePlaceholder ?: thumbHashDrawable)
+          .placeholder(drawablePlaceholder ?: thumbHashDrawable?: blurHashDrawable)
           .error(failureDrawable ?: drawablePlaceholder)
           .fallback(failureDrawable ?: drawablePlaceholder)
           .memoryCachePolicy(if (cachePolicy == "memory") CachePolicy.ENABLED else CachePolicy.DISABLED)
@@ -232,6 +234,11 @@ import com.facebook.react.uimanager.events.RCTEventEmitter
         val thumbHash = ThumbHash.thumbHashToRGBA(Base64.decode(hash, Base64.DEFAULT))
         val bitmap = Bitmap.createBitmap(thumbHash.width, thumbHash.height, Bitmap.Config.ARGB_8888)
         bitmap.setPixels(toIntArray(thumbHash.rgba), 0, thumbHash.width, 0, 0, thumbHash.width, thumbHash.height)
+        return BitmapDrawable(view.context.resources, bitmap)
+      }
+
+      private fun makeBlurHash(view: AppCompatImageView, hash: String): Drawable {
+        val bitmap = BlurHashDecoder.decode(hash, 8, 8)
         return BitmapDrawable(view.context.resources, bitmap)
       }
 
