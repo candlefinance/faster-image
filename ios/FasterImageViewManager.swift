@@ -21,6 +21,18 @@ final class FasterImageViewManager: RCTViewManager {
             }
         }
     }
+
+  @objc
+  func prefetch(_ sources: [String],
+                resolve: @escaping RCTPromiseResolveBlock,
+                reject: @escaping RCTPromiseRejectBlock) {
+                do {
+    let prefetcher = ImagePrefetcher()
+    let urls = sources.map { url in URL(string: url )}.compactMap{ $0 }
+    prefetcher.startPrefetching(with: urls)
+    resolve(true)
+    } catch { reject() }
+  }
 }
 
 struct ImageOptions: Decodable {
