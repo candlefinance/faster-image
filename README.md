@@ -26,7 +26,7 @@ A performant way to render images in React Native with a focus on speed and memo
 - [x] Fast image loading
 - [x] Memory and disk caching
 - [x] Placeholder support:
-  - [x] [blurhash](https://github.com/woltapp/blurhash) (iOS only)
+  - [x] [blurhash](https://github.com/woltapp/blurhash) (iOS & Android)
   - [x] [thumbhash](https://github.com/evanw/thumbhash) (iOS only)
   - [x] Base64 encoded image
 - [x] Animated transition
