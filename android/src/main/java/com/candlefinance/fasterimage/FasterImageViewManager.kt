@@ -246,8 +246,17 @@ import com.facebook.react.uimanager.events.RCTEventEmitter
         val intArray = IntArray(byteArray.size)
         for (i in byteArray.indices) {
           intArray[i] = byteArray[i].toInt() and 0xFF
+        val intArray = IntArray(thumbHash.width * thumbHash.height)
+        for (i in intArray.indices) {
+          val r = thumbHash.rgba[i * 4].toInt() and 0xFF
+          val g = thumbHash.rgba[i * 4 + 1].toInt() and 0xFF
+          val b = thumbHash.rgba[i * 4 + 2].toInt() and 0xFF
+          val a = thumbHash.rgba[i * 4 + 3].toInt() and 0xFF
+          intArray[i] =
+            ((a and 0xff) shl 24) or ((r and 0xff) shl 16) or ((g and 0xff) shl 8) or (b and 0xff)
         }
-        return intArray
+        val bitmap = Bitmap.createBitmap(intArray, thumbHash.width, thumbHash.height, Bitmap.Config.ARGB_8888)
+        return BitmapDrawable(view.context.resources, bitmap)
       }
 
     companion object {
