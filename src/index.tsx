@@ -1,9 +1,9 @@
 import {
+  ColorValue,
   ImageStyle,
-  requireNativeComponent,
   NativeModules,
   Platform,
-  ColorValue,
+  requireNativeComponent,
 } from 'react-native';
 
 export type IOSImageResizeMode =
@@ -130,3 +130,13 @@ export const clearCache = async () => {
     return FasterImageModule.clearCache();
   }
 };
+
+export const prefetch(sources: string[]): Promise<void> {
+  if (Platform.OS === 'ios') {
+    const { FasterImageViewManager } = NativeModules;
+    return FasterImageViewManager.prefetch(sources);
+  } else {
+    const { FasterImageModule } = NativeModules;
+    return FasterImageModule.prefetch(sources);
+  }
+}
