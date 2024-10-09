@@ -140,6 +140,7 @@ final class FasterImageView: UIView {
                 if let url = URL(string: options.url) {
                     var urlRequestFromOptions = URLRequest(url: url)
                     urlRequestFromOptions.allHTTPHeaderFields = options.headers
+
                     urlRequest = urlRequestFromOptions
 
                     if ignoreQueryParamsForCacheKey {

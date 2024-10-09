@@ -98,7 +98,7 @@ import com.facebook.react.uimanager.events.RCTEventEmitter
         val headers = options.getMap("headers")
         val ignoreQueryParamsForCacheKey = if (options.hasKey("ignoreQueryParamsForCacheKey")) options.getBoolean("ignoreQueryParamsForCacheKey") else false
 
-       val borderRadii = BorderRadii(
+        val borderRadii = BorderRadii(
           uniform = if (options.hasKey("borderRadius")) options.getDouble("borderRadius") else 0.0,
           topLeft = if (options.hasKey("borderTopLeftRadius")) options.getDouble("borderTopLeftRadius") else 0.0,
           topRight = if (options.hasKey("borderTopRightRadius")) options.getDouble("borderTopRightRadius") else 0.0,
@@ -283,7 +283,6 @@ import com.facebook.react.uimanager.events.RCTEventEmitter
       )
     }
   }
-
 
   object ThumbHash {
     /**
