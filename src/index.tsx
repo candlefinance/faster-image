@@ -47,6 +47,7 @@ export type AndroidImageResizeMode =
  * @property {number} [borderBottomRightRadius] - Bottom right border radius of the image
  * @property {number} [grayscale] - Grayscale value of the image, 0-1
  * @property {boolean} [allowHardware] - Allow hardware rendering, defaults to true (Android only)
+ * @property {boolean} [ignoreQueryParamsForCacheKey] - Ignore query params for cache key, defaults to false
  */
 export type ImageOptions = {
   blurhash?: string;
@@ -70,6 +71,7 @@ export type ImageOptions = {
   headers?: Record<string, string>;
   grayscale?: number;
   allowHardware?: boolean;
+  ignoreQueryParamsForCacheKey?: boolean;
 };
 
 /**
