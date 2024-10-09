@@ -93,6 +93,7 @@ await clearCache();
 | onError                   | function               |                          | The function to call when an error occurs. The error is passed as the first argument of the function |
 | onSuccess                 | function               |                          | The function to call when the image is successfully loaded                                           |
 | grayscale                 | number                 | 0                        | Filter or transformation that converts the image into shades of gray (0-1).                          |
+| ignoreQueryParamsForCacheKey | boolean | false | Ignore URL query parameters in cache keys |
 | allowHardware             | boolean                | true                     | Allow hardware rendering (Android only)                                                              |
 | headers                   | Record<string, string> | undefined                | Pass in headers                                                                                      |
 | accessibilityLabel        | string                 | undefined                | accessibility label                                                                                  |
