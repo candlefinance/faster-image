@@ -10,6 +10,7 @@ import android.graphics.RectF
 import android.graphics.Path
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
+import android.net.Uri
 import android.os.Build
 import android.util.Base64
 import android.view.View
@@ -18,6 +19,7 @@ import android.widget.ImageView.ScaleType
 import androidx.appcompat.widget.AppCompatImageView
 import coil.annotation.ExperimentalCoilApi
 import coil.imageLoader
+import coil.memory.MemoryCache
 import coil.request.CachePolicy
 import coil.request.ImageRequest
 import coil.size.Scale
@@ -93,9 +95,10 @@ import com.facebook.react.uimanager.events.RCTEventEmitter
         val failureImage = options.getString("failureImage")
         val grayscale = if (options.hasKey("grayscale")) options.getDouble("grayscale") else 0.0
         val allowHardware = if (options.hasKey("allowHardware")) options.getBoolean("allowHardware") else true
-       val headers = options.getMap("headers")
+        val headers = options.getMap("headers")
+        val ignoreQueryParamsForCacheKey = if (options.hasKey("ignoreQueryParamsForCacheKey")) options.getBoolean("ignoreQueryParamsForCacheKey") else false
 
-        val borderRadii = BorderRadii(
+       val borderRadii = BorderRadii(
           uniform = if (options.hasKey("borderRadius")) options.getDouble("borderRadius") else 0.0,
           topLeft = if (options.hasKey("borderTopLeftRadius")) options.getDouble("borderTopLeftRadius") else 0.0,
           topRight = if (options.hasKey("borderTopRightRadius")) options.getDouble("borderTopRightRadius") else 0.0,
@@ -127,6 +130,20 @@ import com.facebook.react.uimanager.events.RCTEventEmitter
            )
          } else {
            requestBuilder = requestBuilder.data(it)
+           if (ignoreQueryParamsForCacheKey) {
+             val uri = Uri.parse(it)
+             val keyUri = uri.buildUpon().clearQuery().build()
+             val cacheKey = keyUri.toString()
+             val memoryCacheKey = MemoryCache.Key(cacheKey)
+             if (cachePolicy.equals("memory")) {
+               requestBuilder = requestBuilder
+                 .memoryCacheKey(memoryCacheKey)
+             } else {
+               requestBuilder = requestBuilder
+                 .memoryCacheKey(memoryCacheKey)
+                 .diskCacheKey(cacheKey)
+             }
+           }
            headers?.let {
              for (entry in it.entryIterator) {
                requestBuilder.setHeader(entry.key, entry.value as String)
@@ -232,20 +249,6 @@ import com.facebook.react.uimanager.events.RCTEventEmitter
 
       private fun makeThumbHash(view: AppCompatImageView, hash: String): Drawable {
         val thumbHash = ThumbHash.thumbHashToRGBA(Base64.decode(hash, Base64.DEFAULT))
-        val bitmap = Bitmap.createBitmap(thumbHash.width, thumbHash.height, Bitmap.Config.ARGB_8888)
-        bitmap.setPixels(toIntArray(thumbHash.rgba), 0, thumbHash.width, 0, 0, thumbHash.width, thumbHash.height)
-        return BitmapDrawable(view.context.resources, bitmap)
-      }
-
-      private fun makeBlurHash(view: AppCompatImageView, hash: String): Drawable {
-        val bitmap = BlurHashDecoder.decode(hash, 8, 8)
-        return BitmapDrawable(view.context.resources, bitmap)
-      }
-
-      private fun toIntArray(byteArray: ByteArray): IntArray {
-        val intArray = IntArray(byteArray.size)
-        for (i in byteArray.indices) {
-          intArray[i] = byteArray[i].toInt() and 0xFF
         val intArray = IntArray(thumbHash.width * thumbHash.height)
         for (i in intArray.indices) {
           val r = thumbHash.rgba[i * 4].toInt() and 0xFF
@@ -256,6 +259,11 @@ import com.facebook.react.uimanager.events.RCTEventEmitter
             ((a and 0xff) shl 24) or ((r and 0xff) shl 16) or ((g and 0xff) shl 8) or (b and 0xff)
         }
         val bitmap = Bitmap.createBitmap(intArray, thumbHash.width, thumbHash.height, Bitmap.Config.ARGB_8888)
+        return BitmapDrawable(view.context.resources, bitmap)
+      }
+
+      private fun makeBlurHash(view: AppCompatImageView, hash: String): Drawable {
+        val bitmap = BlurHashDecoder.decode(hash, 8, 8)
         return BitmapDrawable(view.context.resources, bitmap)
       }
 
@@ -275,6 +283,7 @@ import com.facebook.react.uimanager.events.RCTEventEmitter
       )
     }
   }
+
 
   object ThumbHash {
     /**

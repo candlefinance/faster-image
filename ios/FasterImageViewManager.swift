@@ -42,6 +42,7 @@ struct ImageOptions: Decodable {
     let url: String
     let headers: [String: String]?
     let grayscale: Double?
+    let ignoreQueryParamsForCacheKey: Bool?
 }
 
 struct BorderRadii {
@@ -134,12 +135,19 @@ final class FasterImageView: UIView {
                 }
                 progressiveLoadingEnabled = options.progressiveLoadingEnabled ?? false
                 grayscale = options.grayscale ?? 0.0
+                ignoreQueryParamsForCacheKey = options.ignoreQueryParamsForCacheKey ?? false
 
                 if let url = URL(string: options.url) {
                     var urlRequestFromOptions = URLRequest(url: url)
                     urlRequestFromOptions.allHTTPHeaderFields = options.headers
-                    
                     urlRequest = urlRequestFromOptions
+
+                    if ignoreQueryParamsForCacheKey {
+                        var components = URLComponents(url: url, resolvingAgainstBaseURL: false)
+                        components?.query = nil
+                        var url = components?.url?.absoluteString ?? url.absoluteString
+                        lazyImageView.request?.userInfo[.imageIdKey] = url
+                    }
                 } else {
                     onError?([
                         "error": "Expected a valid url but got: \(options.url)",
@@ -269,6 +277,8 @@ final class FasterImageView: UIView {
             lazyImageView.pipeline = CachePolicy(rawValue: cachePolicy)?.pipeline ?? .shared
         }
     }
+
+    var ignoreQueryParamsForCacheKey = false
 
     // MARK: - Optional Properties
 
