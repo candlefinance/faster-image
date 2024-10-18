@@ -381,7 +381,7 @@ final class FasterImageView: UIView {
 
     var urlRequest: URLRequest? = nil {
         didSet {
-            lazyImageView.request = ImageRequest(urlRequest: urlRequest!)
+          lazyImageView.request = ImageRequest(urlRequest: urlRequest!, priority: ImageRequest.Priority.init(priority))
         }
     }
 
