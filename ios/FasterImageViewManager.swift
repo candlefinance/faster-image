@@ -82,7 +82,7 @@ final class FasterImageView: UIView {
     // MARK: - Initializers
 
     init() {
-        self.priority = "normal"
+        self.priority = .normal
       
         super.init(frame: .zero)
         addSubview(lazyImageView)
@@ -137,7 +137,7 @@ final class FasterImageView: UIView {
               
             
                 if let priority = options.priority {
-                  self.priority = priority
+                  self.priority = ImageRequest.Priority.init(priority)
                 }
 
                 if let blurhash = options.blurhash {
@@ -278,9 +278,9 @@ final class FasterImageView: UIView {
         }
     }
   
-    var priority: String {
+    var priority: ImageRequest.Priority {
       didSet {
-        lazyImageView.priority = ImageRequest.Priority.init(priority)
+        lazyImageView.priority = priority
       }
     }
 
@@ -381,7 +381,7 @@ final class FasterImageView: UIView {
 
     var urlRequest: URLRequest? = nil {
         didSet {
-          lazyImageView.request = ImageRequest(urlRequest: urlRequest!, priority: ImageRequest.Priority.init(priority))
+          lazyImageView.request = ImageRequest(urlRequest: urlRequest!, priority: priority)
         }
     }
 
