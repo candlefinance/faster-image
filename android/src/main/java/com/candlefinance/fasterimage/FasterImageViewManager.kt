@@ -186,9 +186,24 @@ class FasterImageViewManager : SimpleViewManager<AppCompatImageView>() {
             .getJSModule(RCTEventEmitter::class.java)
             .receiveEvent(view.id, "onSuccess", event)
 
-          if (grayscale == 0.0) {
-            view.setImageDrawable(result)
-          } else {
+          if (options.hasKey("colorMatrix")) {
+            val colorMatrixDrawable = result.mutate()
+            val colorMatrixArray = options.getArray("colorMatrix")
+            if (colorMatrixArray != null && colorMatrixArray.size() == 4 && (0 until colorMatrixArray.size()).all { colorMatrixArray.getArray(it)?.size() == 5 }) {
+              val flattenedMatrix = FloatArray(20)
+              for (i in 0 until 4) {
+                  val row = colorMatrixArray.getArray(i)
+                  if (row != null) {
+                      for (j in 0 until 5) {
+                          flattenedMatrix[i * 5 + j] = row.getDouble(j).toFloat()
+                      }
+                  }
+              }
+              val colorMatrix = ColorMatrix(flattenedMatrix)
+              colorMatrixDrawable.colorFilter = ColorMatrixColorFilter(colorMatrix)
+              view.setImageDrawable(colorMatrixDrawable)
+            }
+          } else if (grayscale > 0.0) {
             val grayscaleDrawable = result.mutate()
             val colorMatrix = ColorMatrix().apply {
               setSaturation((1.0 - grayscale).toFloat())
@@ -196,6 +211,8 @@ class FasterImageViewManager : SimpleViewManager<AppCompatImageView>() {
             val colorFilter = ColorMatrixColorFilter(colorMatrix)
             grayscaleDrawable.colorFilter = colorFilter
             view.setImageDrawable(grayscaleDrawable)
+          } else {
+            view.setImageDrawable(result)
           }
         },
         onError = { error ->

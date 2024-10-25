@@ -46,6 +46,7 @@ export type AndroidImageResizeMode =
  * @property {number} [borderBottomLeftRadius] - Bottom left border radius of the image
  * @property {number} [borderBottomRightRadius] - Bottom right border radius of the image
  * @property {number} [grayscale] - Grayscale value of the image, 0-1
+ * @property {number[][]} [colorMatrix] - Color matrix to apply to the image
  * @property {boolean} [allowHardware] - Allow hardware rendering, defaults to true (Android only)
  * @property {boolean} [ignoreQueryParamsForCacheKey] - Ignore query params for cache key, defaults to false
  * @property {'veryLow' | 'low' | 'normal' | 'high' | 'veryHigh'} [priority] - Set Image's loading priority, defaults to 'normal' (iOS only)
@@ -75,6 +76,7 @@ export type ImageOptions = {
   url: string;
   headers?: Record<string, string>;
   grayscale?: number;
+  colorMatrix?: number[][];
   allowHardware?: boolean;
   ignoreQueryParamsForCacheKey?: boolean;
   priority?: 'veryLow' | 'low' | 'normal' | 'high' | 'veryHigh';
