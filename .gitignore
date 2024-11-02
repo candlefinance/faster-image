@@ -2725,3 +2725,5 @@ example/.yarn/cache/
 
 .yarn/cache/yocto-queue-npm-1.0.0-7b502f1987-2cac84540f.zip
 *.gz
+
+.yarn/cache/

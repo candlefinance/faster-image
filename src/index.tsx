@@ -1,9 +1,9 @@
 import {
+  ColorValue,
   ImageStyle,
-  requireNativeComponent,
   NativeModules,
   Platform,
-  ColorValue,
+  requireNativeComponent,
 } from 'react-native';
 
 export type IOSImageResizeMode =
@@ -73,7 +73,7 @@ export type ImageOptions = {
   grayscale?: number;
   allowHardware?: boolean;
   ignoreQueryParamsForCacheKey?: boolean;
-  priority?: "veryLow" | "low" | "normal" | "high" | "veryHigh"
+  priority?: 'veryLow' | 'low' | 'normal' | 'high' | 'veryHigh';
 };
 
 /**
@@ -132,5 +132,15 @@ export const clearCache = async () => {
   } else {
     const { FasterImageModule } = NativeModules;
     return FasterImageModule.clearCache();
+  }
+};
+
+export const prefetch = (sources: string[]): Promise<void> => {
+  if (Platform.OS === 'ios') {
+    const { FasterImageViewManager } = NativeModules;
+    return FasterImageViewManager.prefetch(sources);
+  } else {
+    const { FasterImageModule } = NativeModules;
+    return FasterImageModule.prefetch(sources);
   }
 };
