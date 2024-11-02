@@ -67,6 +67,10 @@ import { FasterImageView, clearCache } from '@candlefinance/faster-image';
 
 // Clear memory and disk cache
 await clearCache();
+
+// Prefetch
+await prefetch(['https://picsum.photos/200/200?random=0'])
+
 ```
 
 ## Props
