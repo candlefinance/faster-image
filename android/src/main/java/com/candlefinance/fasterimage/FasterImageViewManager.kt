@@ -69,8 +69,8 @@ import com.facebook.react.uimanager.events.RCTEventEmitter
           .data(url)
           .build()
       }
-      imageLoader.enqueue(requests)
-      promise.resolve(null)
+      requests.forEach { imageLoader.enqueue(it) }
+      promise.resolve(true)
     }
   }
 
