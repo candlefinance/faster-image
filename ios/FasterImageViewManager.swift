@@ -16,22 +16,20 @@ final class FasterImageViewManager: RCTViewManager {
             ImagePipeline.shared.cache.removeAll()
             ImageCache.shared.removeAll()
             DataLoader.sharedUrlCache.removeAllCachedResponses()
+            URLSession.shared.invalidateAndCancel()
             DispatchQueue.main.async {
                 resolve(true)
             }
         }
     }
 
-  @objc
-  func prefetch(_ sources: [String],
+  @objc(prefetch:withResolver:withRejecter:)
+  func prefetch(sources: [String],
                 resolve: @escaping RCTPromiseResolveBlock,
                 reject: @escaping RCTPromiseRejectBlock) {
-                do {
-    let prefetcher = ImagePrefetcher()
-    let urls = sources.map { url in URL(string: url )}.compactMap{ $0 }
-    prefetcher.startPrefetching(with: urls)
-    resolve(true)
-    } catch { reject() }
+      let prefetcher = ImagePrefetcher()
+      prefetcher.startPrefetching(with: sources.compactMap(URL.init(string:)))
+      resolve(true)
   }
 }
 

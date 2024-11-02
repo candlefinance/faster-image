@@ -1,6 +1,10 @@
 import * as React from 'react';
 
-import { FasterImageView, clearCache } from '@candlefinance/faster-image';
+import {
+  FasterImageView,
+  clearCache,
+  prefetch,
+} from '@candlefinance/faster-image';
 import {
   Button,
   DevSettings,
@@ -21,6 +25,10 @@ if (__DEV__ && Platform.OS === 'ios') {
   DevSettings.addMenuItem('Clear Cache', async () => {
     const result = await clearCache();
     console.log('cache cleared', result);
+  });
+  DevSettings.addMenuItem('Prefetch', async () => {
+    const result = await prefetch(['https://picsum.photos/200/200?random=0']);
+    console.log('prefetched', result);
   });
 }
 
