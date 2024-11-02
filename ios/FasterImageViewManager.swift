@@ -74,7 +74,9 @@ final class FasterImageView: UIView {
         lazyImageView.pipeline = .shared
         lazyImageView.priority = .high
         lazyImageView.onCompletion = { [weak self] result in
-            self?.completionHandler(with: result)
+            DispatchQueue.main.async {
+                self?.completionHandler(with: result)
+            }
         }
     }
 
