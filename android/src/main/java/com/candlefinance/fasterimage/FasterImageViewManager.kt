@@ -119,6 +119,7 @@ import com.facebook.react.uimanager.events.RCTEventEmitter
        val blurHashDrawable = blurHash?.let { makeBlurHash(view, it) }
 
        var requestBuilder = ImageRequest.Builder(view.context)
+
        // Handle base64 image sources
        url?.let {
          if (it.startsWith("data:image")) {

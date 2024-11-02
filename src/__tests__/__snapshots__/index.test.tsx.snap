@@ -1,0 +1,17 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`index check test Image Rendering 1`] = `
+<FasterImageView
+  source={
+    {
+      "testUri": "../../../example/images/candle-logo.png",
+    }
+  }
+  style={
+    {
+      "height": 100,
+      "width": 100,
+    }
+  }
+/>
+`;

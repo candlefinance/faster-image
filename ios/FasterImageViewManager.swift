@@ -42,6 +42,7 @@ struct ImageOptions: Decodable {
     let url: String
     let headers: [String: String]?
     let grayscale: Double?
+    let priority: String?
 }
 
 struct BorderRadii {
@@ -56,12 +57,33 @@ struct BorderRadii {
   }
 }
 
+extension ImageRequest.Priority {
+  init(_ value: String? = "normal") {
+    switch value {
+    case "normal":
+      self = .normal
+    case "veryLow":
+      self = .veryLow
+    case "low":
+      self = .low
+    case "high":
+      self = .high
+    case "veryHigh":
+      self = .veryHigh
+    default:
+      self = .normal
+    }
+  }
+}
+
 /// A wrapper around `LazyImageView` to make it compatible with React Native.
 final class FasterImageView: UIView {
 
     // MARK: - Initializers
 
     init() {
+        self.priority = .normal
+      
         super.init(frame: .zero)
         addSubview(lazyImageView)
         lazyImageView.translatesAutoresizingMaskIntoConstraints = false
@@ -72,7 +94,6 @@ final class FasterImageView: UIView {
             lazyImageView.trailingAnchor.constraint(equalTo: trailingAnchor),
         ])
         lazyImageView.pipeline = .shared
-        lazyImageView.priority = .high
         lazyImageView.onCompletion = { [weak self] result in
             DispatchQueue.main.async {
                 self?.completionHandler(with: result)
@@ -115,6 +136,11 @@ final class FasterImageView: UIView {
                   bottomLeft: options.borderBottomLeftRadius ?? 0.0,
                   bottomRight: options.borderBottomRightRadius ?? 0.0
                 )
+              
+            
+                if let priority = options.priority {
+                  self.priority = ImageRequest.Priority.init(priority)
+                }
 
                 if let blurhash = options.blurhash {
                     self.blurhash = blurhash
@@ -253,6 +279,12 @@ final class FasterImageView: UIView {
             lazyImageView.imageView.contentMode = mode?.contentMode ?? .scaleAspectFit
         }
     }
+  
+    var priority: ImageRequest.Priority {
+      didSet {
+        lazyImageView.priority = priority
+      }
+    }
 
     var transitionDuration: NSNumber = 0.5 {
         didSet {
@@ -351,7 +383,7 @@ final class FasterImageView: UIView {
 
     var urlRequest: URLRequest? = nil {
         didSet {
-            lazyImageView.request = ImageRequest(urlRequest: urlRequest!)
+          lazyImageView.request = ImageRequest(urlRequest: urlRequest!, priority: priority)
         }
     }
 
