@@ -48,6 +48,7 @@ export type AndroidImageResizeMode =
  * @property {number} [grayscale] - Grayscale value of the image, 0-1
  * @property {boolean} [allowHardware] - Allow hardware rendering, defaults to true (Android only)
  * @property {boolean} [ignoreQueryParamsForCacheKey] - Ignore query params for cache key, defaults to false
+ * @property {'veryLow' | 'low' | 'normal' | 'high' | 'veryHigh'} [priority] - Set Image's loading priority, defaults to 'normal' (iOS only)
  */
 export type ImageOptions = {
   blurhash?: string;
@@ -72,6 +73,7 @@ export type ImageOptions = {
   grayscale?: number;
   allowHardware?: boolean;
   ignoreQueryParamsForCacheKey?: boolean;
+  priority?: "veryLow" | "low" | "normal" | "high" | "veryHigh"
 };
 
 /**
