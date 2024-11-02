@@ -73,7 +73,7 @@ export type ImageOptions = {
   grayscale?: number;
   allowHardware?: boolean;
   ignoreQueryParamsForCacheKey?: boolean;
-  priority?: "veryLow" | "low" | "normal" | "high" | "veryHigh"
+  priority?: 'veryLow' | 'low' | 'normal' | 'high' | 'veryHigh';
 };
 
 /**
@@ -135,7 +135,7 @@ export const clearCache = async () => {
   }
 };
 
-export const prefetch(sources: string[]): Promise<void> {
+export const prefetch = (sources: string[]): Promise<void> => {
   if (Platform.OS === 'ios') {
     const { FasterImageViewManager } = NativeModules;
     return FasterImageViewManager.prefetch(sources);
@@ -143,4 +143,4 @@ export const prefetch(sources: string[]): Promise<void> {
     const { FasterImageModule } = NativeModules;
     return FasterImageModule.prefetch(sources);
   }
-}
+};
