@@ -6,16 +6,7 @@ import Foundation
 
 enum ImageDecompression {
     static func isDecompressionNeeded(for response: ImageResponse) -> Bool {
-        guard response.container.type != .png else {
-            // Attempting to decompress a `.png` image using
-            // `prepareForReuse` results in the following error:
-            //
-            // [Decompressor] Error -17102 decompressing image -- possibly corrupt
-            //
-            // It's also, in general, inefficient and unnecessary.
-            return false
-        }
-        return isDecompressionNeeded(for: response.image) ?? false
+        isDecompressionNeeded(for: response.image) ?? false
     }
 
     static func decompress(image: PlatformImage, isUsingPrepareForDisplay: Bool = false) -> PlatformImage {
@@ -24,7 +15,12 @@ enum ImageDecompression {
 
     // MARK: Managing Decompression State
 
+#if swift(>=5.10)
+    // Safe because it's never mutated.
+    nonisolated(unsafe) static let isDecompressionNeededAK = malloc(1)!
+#else
     static let isDecompressionNeededAK = malloc(1)!
+#endif
 
     static func setDecompressionNeeded(_ isDecompressionNeeded: Bool, for image: PlatformImage) {
         objc_setAssociatedObject(image, isDecompressionNeededAK, isDecompressionNeeded, .OBJC_ASSOCIATION_RETAIN)

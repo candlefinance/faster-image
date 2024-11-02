@@ -160,42 +160,35 @@ extension PlatformImage {
 
 private extension CGContext {
     static func make(_ image: CGImage, size: CGSize, alphaInfo: CGImageAlphaInfo? = nil) -> CGContext? {
-        let alphaInfo: CGImageAlphaInfo = alphaInfo ?? preferredAlphaInfo(for: image)
-
-        // Create the context which matches the input image.
-        if let ctx = CGContext(
-            data: nil,
-            width: Int(size.width),
-            height: Int(size.height),
-            bitsPerComponent: 8,
-            bytesPerRow: 0,
-            space: image.colorSpace ?? CGColorSpaceCreateDeviceRGB(),
-            bitmapInfo: alphaInfo.rawValue
-        ) {
+        if let ctx = CGContext.make(image, size: size, alphaInfo: alphaInfo, colorSpace: image.colorSpace ?? CGColorSpaceCreateDeviceRGB()) {
             return ctx
         }
-
         // In case the combination of parameters (color space, bits per component, etc)
         // is nit supported by Core Graphics, switch to default context.
         // - Quartz 2D Programming Guide
         // - https://github.com/kean/Nuke/issues/35
         // - https://github.com/kean/Nuke/issues/57
-        return CGContext(
+        return CGContext.make(image, size: size, alphaInfo: alphaInfo, colorSpace: CGColorSpaceCreateDeviceRGB())
+    }
+
+    static func make(_ image: CGImage, size: CGSize, alphaInfo: CGImageAlphaInfo?, colorSpace: CGColorSpace) -> CGContext? {
+        CGContext(
             data: nil,
-            width: Int(size.width), height: Int(size.height),
+            width: Int(size.width),
+            height: Int(size.height),
             bitsPerComponent: 8,
             bytesPerRow: 0,
-            space: CGColorSpaceCreateDeviceRGB(),
-            bitmapInfo: alphaInfo.rawValue
+            space: colorSpace,
+            bitmapInfo: (alphaInfo ?? preferredAlphaInfo(for: image, colorSpace: colorSpace)).rawValue
         )
     }
 
     /// - See https://developer.apple.com/library/archive/documentation/GraphicsImaging/Conceptual/drawingwithquartz2d/dq_context/dq_context.html#//apple_ref/doc/uid/TP30001066-CH203-BCIBHHBB
-    private static func preferredAlphaInfo(for image: CGImage) -> CGImageAlphaInfo {
+    private static func preferredAlphaInfo(for image: CGImage, colorSpace: CGColorSpace) -> CGImageAlphaInfo {
         guard image.isOpaque else {
             return .premultipliedLast
         }
-        if image.bitsPerPixel == 8 {
+        if colorSpace.numberOfComponents == 1 && image.bitsPerPixel == 8 {
             return .none // The only pixel format supported for grayscale CS
         }
         return .noneSkipLast
@@ -251,9 +244,22 @@ extension CGImagePropertyOrientation {
         }
     }
 }
-#endif
 
-#if canImport(UIKit)
+extension UIImage.Orientation {
+    init(_ cgOrientation: CGImagePropertyOrientation) {
+        switch cgOrientation {
+        case .up: self = .up
+        case .upMirrored: self = .upMirrored
+        case .down: self = .down
+        case .downMirrored: self = .downMirrored
+        case .left: self = .left
+        case .leftMirrored: self = .leftMirrored
+        case .right: self = .right
+        case .rightMirrored: self = .rightMirrored
+        }
+    }
+}
+
 private extension CGSize {
     func rotatedForOrientation(_ imageOrientation: CGImagePropertyOrientation) -> CGSize {
         switch imageOrientation {
@@ -358,7 +364,10 @@ extension Color {
 }
 
 /// Creates an image thumbnail. Uses significantly less memory than other options.
-func makeThumbnail(data: Data, options: ImageRequest.ThumbnailOptions) -> PlatformImage? {
+/// - parameter data: Data object from which to read the image.
+/// - parameter options: Image loading options.
+/// - parameter scale: The scale factor to assume when interpreting the image data, defaults to 1.
+func makeThumbnail(data: Data, options: ImageRequest.ThumbnailOptions, scale: CGFloat = 1.0) -> PlatformImage? {
     guard let source = CGImageSourceCreateWithData(data as CFData, [kCGImageSourceShouldCache: false] as CFDictionary) else {
         return nil
     }
@@ -373,7 +382,18 @@ func makeThumbnail(data: Data, options: ImageRequest.ThumbnailOptions) -> Platfo
     guard let image = CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary) else {
         return nil
     }
+
+#if canImport(UIKit)
+    var orientation: UIImage.Orientation = .up
+    if let imageProperties = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [AnyHashable: Any],
+       let orientationValue = imageProperties[kCGImagePropertyOrientation as String] as? UInt32,
+       let cgOrientation = CGImagePropertyOrientation(rawValue: orientationValue) {
+        orientation = UIImage.Orientation(cgOrientation)
+    }
+    return PlatformImage(cgImage: image, scale: scale, orientation: orientation)
+#else
     return PlatformImage(cgImage: image)
+#endif
 }
 
 private func getMaxPixelSize(for source: CGImageSource, options thumbnailOptions: ImageRequest.ThumbnailOptions) -> CGFloat {

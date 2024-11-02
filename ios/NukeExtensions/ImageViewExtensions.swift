@@ -88,7 +88,7 @@ extension TVPosterView: Nuke_ImageDisplaying {
 @MainActor
 @discardableResult public func loadImage(
     with url: URL?,
-    options: ImageLoadingOptions = ImageLoadingOptions.shared,
+    options: ImageLoadingOptions? = nil,
     into view: ImageDisplayingView,
     completion: @escaping (_ result: Result<ImageResponse, ImagePipeline.Error>) -> Void
 ) -> ImageTask? {
@@ -121,13 +121,13 @@ extension TVPosterView: Nuke_ImageDisplaying {
 @MainActor
 @discardableResult public func loadImage(
     with url: URL?,
-    options: ImageLoadingOptions = ImageLoadingOptions.shared,
+    options: ImageLoadingOptions? = nil,
     into view: ImageDisplayingView,
     progress: ((_ response: ImageResponse?, _ completed: Int64, _ total: Int64) -> Void)? = nil,
     completion: ((_ result: Result<ImageResponse, ImagePipeline.Error>) -> Void)? = nil
 ) -> ImageTask? {
     let controller = ImageViewController.controller(for: view)
-    return controller.loadImage(with: url.map({ ImageRequest(url: $0) }), options: options, progress: progress, completion: completion)
+    return controller.loadImage(with: url.map({ ImageRequest(url: $0) }), options: options ?? .shared, progress: progress, completion: completion)
 }
 
 /// Loads an image with the given request and displays it in the view.
@@ -136,11 +136,11 @@ extension TVPosterView: Nuke_ImageDisplaying {
 @MainActor
 @discardableResult public func loadImage(
     with request: ImageRequest?,
-    options: ImageLoadingOptions = ImageLoadingOptions.shared,
+    options: ImageLoadingOptions? = nil,
     into view: ImageDisplayingView,
     completion: @escaping (_ result: Result<ImageResponse, ImagePipeline.Error>) -> Void
 ) -> ImageTask? {
-    loadImage(with: request, options: options, into: view, progress: nil, completion: completion)
+    loadImage(with: request, options: options ?? .shared, into: view, progress: nil, completion: completion)
 }
 
 /// Loads an image with the given request and displays it in the view.
@@ -169,13 +169,13 @@ extension TVPosterView: Nuke_ImageDisplaying {
 @MainActor
 @discardableResult public func loadImage(
     with request: ImageRequest?,
-    options: ImageLoadingOptions = ImageLoadingOptions.shared,
+    options: ImageLoadingOptions? = nil,
     into view: ImageDisplayingView,
     progress: ((_ response: ImageResponse?, _ completed: Int64, _ total: Int64) -> Void)? = nil,
     completion: ((_ result: Result<ImageResponse, ImagePipeline.Error>) -> Void)? = nil
 ) -> ImageTask? {
     let controller = ImageViewController.controller(for: view)
-    return controller.loadImage(with: request, options: options, progress: progress, completion: completion)
+    return controller.loadImage(with: request, options: options ?? .shared, progress: progress, completion: completion)
 }
 
 /// Cancels an outstanding request associated with the view.
@@ -215,7 +215,12 @@ private final class ImageViewController {
 
     // MARK: - Associating Controller
 
+#if swift(>=5.10)
+    // Safe because it's never mutated.
+    nonisolated(unsafe) static let controllerAK = malloc(1)!
+#else
     static let controllerAK = malloc(1)!
+#endif
 
     // Lazily create a controller for a given view and associate it with a view.
     static func controller(for view: ImageDisplayingView) -> ImageViewController {
@@ -399,7 +404,7 @@ extension ImageViewController {
         )
     }
 
-    /// Performs cross-dissolve animation alonside transition to a new content
+    /// Performs cross-dissolve animation alongside transition to a new content
     /// mode. This isn't natively supported feature and it requires a second
     /// image view. There might be better ways to implement it.
     private func runCrossDissolveWithContentMode(imageView: UIImageView, image: ImageContainer, params: ImageLoadingOptions.Transition.Parameters) {
@@ -409,8 +414,21 @@ extension ImageViewController {
         // Create a transition view which mimics current view's contents.
         transitionView.image = imageView.image
         transitionView.contentMode = imageView.contentMode
-        imageView.addSubview(transitionView)
-        transitionView.frame = imageView.bounds
+        transitionView.frame = imageView.frame
+        transitionView.tintColor = imageView.tintColor
+        transitionView.tintAdjustmentMode = imageView.tintAdjustmentMode
+#if swift(>=5.9)
+        if #available(iOS 17.0, tvOS 17.0, *) {
+            transitionView.preferredImageDynamicRange = imageView.preferredImageDynamicRange
+        }
+#endif
+        transitionView.preferredSymbolConfiguration = imageView.preferredSymbolConfiguration
+        transitionView.isHidden = imageView.isHidden
+        transitionView.clipsToBounds = imageView.clipsToBounds
+        transitionView.layer.cornerRadius = imageView.layer.cornerRadius
+        transitionView.layer.cornerCurve = imageView.layer.cornerCurve
+        transitionView.layer.maskedCorners = imageView.layer.maskedCorners
+        imageView.superview?.insertSubview(transitionView, aboveSubview: imageView)
 
         // "Manual" cross-fade.
         transitionView.alpha = 1
@@ -425,9 +443,10 @@ extension ImageViewController {
                 transitionView.alpha = 0
                 imageView.alpha = 1
             },
-            completion: { isCompleted in
-                if isCompleted {
+            completion: { [weak transitionView] isCompleted in
+                if isCompleted, let transitionView {
                     transitionView.removeFromSuperview()
+                    transitionView.image = nil
                 }
             }
         )
