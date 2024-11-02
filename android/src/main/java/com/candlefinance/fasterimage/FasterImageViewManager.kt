@@ -59,6 +59,19 @@ import com.facebook.react.uimanager.events.RCTEventEmitter
       imageLoader.diskCache?.clear()
       promise.resolve(true)
     }
+
+    @OptIn(ExperimentalCoilApi::class)
+    @ReactMethod
+    fun prefetch(sources: Array<String>, promise: Promise) {
+      val imageLoader = reactApplicationContext.imageLoader
+      val requests = sources.map { url ->
+        ImageRequest.Builder(reactApplicationContext)
+          .data(url)
+          .build()
+      }
+      imageLoader.enqueue(requests)
+      promise.resolve(null)
+    }
   }
 
   class FasterImageViewManager : SimpleViewManager<AppCompatImageView>() {
