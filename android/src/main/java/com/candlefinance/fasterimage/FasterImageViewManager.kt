@@ -29,6 +29,7 @@ import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactContext
 import com.facebook.react.bridge.ReactContextBaseJavaModule
 import com.facebook.react.bridge.ReactMethod
+import com.facebook.react.bridge.ReadableArray
 import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.uimanager.SimpleViewManager
 import com.facebook.react.uimanager.ThemedReactContext
@@ -60,13 +61,12 @@ import com.facebook.react.uimanager.events.RCTEventEmitter
       promise.resolve(true)
     }
 
-    @OptIn(ExperimentalCoilApi::class)
     @ReactMethod
-    fun prefetch(sources: Array<String>, promise: Promise) {
+    fun prefetch(sources: ReadableArray, promise: Promise) {
       val imageLoader = reactApplicationContext.imageLoader
-      val requests = sources.map { url ->
+      val requests = sources.toArrayList().map { url ->
         ImageRequest.Builder(reactApplicationContext)
-          .data(url)
+          .data(url as String)
           .build()
       }
       requests.forEach { imageLoader.enqueue(it) }

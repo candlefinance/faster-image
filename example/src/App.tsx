@@ -49,6 +49,14 @@ export default function App() {
             });
         }}
       />
+      <Button
+        title="Prefetch"
+        onPress={() => {
+          prefetch(['https://picsum.photos/200/200?random=0']).then((result) =>
+            console.log('prefetched', result)
+          );
+        }}
+      />
       {/* <FasterImageView
         onError={(event) => console.warn(event.nativeEvent.error)}
         style={styles.image}
