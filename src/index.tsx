@@ -64,7 +64,11 @@ export type ImageOptions = {
   showActivityIndicator?: boolean;
   activityColor?: ColorValue;
   transitionDuration?: number;
-  cachePolicy?: 'memory' | 'discWithCacheControl' | 'discNoCacheControl';
+  cachePolicy?:
+    | 'memory'
+    | 'discWithCacheControl'
+    | 'discNoCacheControl'
+    | 'memoryAndDisc';
   failureImage?: string;
   progressiveLoadingEnabled?: boolean;
   base64Placeholder?: string;
