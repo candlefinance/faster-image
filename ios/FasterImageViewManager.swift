@@ -52,6 +52,7 @@ struct ImageOptions: Decodable {
   let url: String
   let headers: [String: String]?
   let grayscale: Double?
+  let colorMatrix: [[Double]]?
   let ignoreQueryParamsForCacheKey: Bool?
   let priority: String?
 }
@@ -173,6 +174,7 @@ final class FasterImageView: UIView {
         }
         progressiveLoadingEnabled = options.progressiveLoadingEnabled ?? false
         grayscale = options.grayscale ?? 0.0
+        colorMatrix = options.colorMatrix ?? [[1.0, 0.0, 0.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0, 0.0], [0.0, 0.0, 1.0, 0.0, 0.0], [0.0, 0.0, 0.0, 1.0, 0.0]]
         ignoreQueryParamsForCacheKey = options.ignoreQueryParamsForCacheKey ?? false
         
         if let url = URL(string: options.url) {
@@ -278,6 +280,26 @@ final class FasterImageView: UIView {
         ]
       }
     }
+  }
+    
+  var colorMatrix = [[1.0, 0.0, 0.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0, 0.0], [0.0, 0.0, 1.0, 0.0, 0.0], [0.0, 0.0, 0.0, 1.0, 0.0]] {
+      didSet {
+          if !colorMatrix.isEmpty && colorMatrix.count == 4 && colorMatrix.allSatisfy(({ $0.count == 5 })) {
+              lazyImageView.processors = [
+                  ImageProcessors.CoreImageFilter(
+                      name: "CIColorMatrix",
+                      parameters: [
+                        "inputRVector": CIVector(x: colorMatrix[0][0], y: colorMatrix[0][1], z: colorMatrix[0][2], w: colorMatrix[0][3]),
+                        "inputGVector": CIVector(x: colorMatrix[1][0], y: colorMatrix[1][1], z: colorMatrix[1][2], w: colorMatrix[1][3]),
+                        "inputBVector": CIVector(x: colorMatrix[2][0], y: colorMatrix[2][1], z: colorMatrix[2][2], w: colorMatrix[2][3]),
+                        "inputAVector": CIVector(x: colorMatrix[3][0], y: colorMatrix[3][1], z: colorMatrix[3][2], w: colorMatrix[3][3]),
+                        "inputBiasVector": CIVector(x: colorMatrix[0][4], y: colorMatrix[1][4], z: colorMatrix[2][4], w: colorMatrix[3][4]),
+                      ],
+                      identifier: "custom.colorMatrix"
+                  )
+              ]
+          }
+      }
   }
   
   var showActivityIndicator = false {
