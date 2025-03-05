@@ -57,6 +57,7 @@ To edit the Objective-C or Swift files, open `example/ios/FasterImageExample.xcw
 
 To edit the Java or Kotlin files, open `example/android` in Android studio and find the source files at `candlefinance-faster-image` under `Android`.
 
+> You will likely need to change the `NODE_BINARY` in `.xcode.env.local` to point to the correct node binary on your machine, otherwise the iOS build will fail
 
 ### Commit message convention
 
