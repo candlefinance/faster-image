@@ -30,6 +30,14 @@ if (__DEV__ && Platform.OS === 'ios') {
     const result = await prefetch(['https://picsum.photos/200/200?random=0']);
     console.log('prefetched', result);
   });
+  DevSettings.addMenuItem('Prefetch with headers', async () => {
+    const result = await prefetch(['https://picsum.photos/200/200?random=0'], {
+      headers: {
+        Authorization: 'Bearer token',
+      },
+    });
+    console.log('prefetched with header', result);
+  });
 }
 
 export default function App() {
@@ -55,6 +63,16 @@ export default function App() {
           prefetch(['https://picsum.photos/200/200?random=0']).then((result) =>
             console.log('prefetched', result)
           );
+        }}
+      />
+      <Button
+        title="Prefetch with headers"
+        onPress={() => {
+          prefetch(['https://picsum.photos/200/200?random=0'], {
+            headers: {
+              Authorization: 'Bearer token',
+            },
+          }).then((result) => console.log('prefetched with header', result));
         }}
       />
       {/* <FasterImageView

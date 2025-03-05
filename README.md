@@ -71,6 +71,13 @@ await clearCache();
 // Prefetch
 await prefetch(['https://picsum.photos/200/200?random=0'])
 
+// Prefetch with headers
+const token = 'your-token';
+await prefetch(['https://picsum.photos/200/200?random=0'], {
+  headers: {
+    Authorization: `Bearer ${token}`,
+  },
+});
 ```
 
 ## Props

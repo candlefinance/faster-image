@@ -64,7 +64,8 @@ public final class ImagePrefetcher: @unchecked Sendable {
     ///   - pipeline: The pipeline used for loading images.
     ///   - destination: By default load images in all cache layers.
     ///   - maxConcurrentRequestCount: 2 by default.
-    public init(pipeline: ImagePipeline = ImagePipeline.shared,
+
+  public init(pipeline: ImagePipeline = ImagePipeline.shared,
                 destination: Destination = .memoryCache,
                 maxConcurrentRequestCount: Int = 2) {
         self.pipeline = pipeline
