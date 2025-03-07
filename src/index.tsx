@@ -147,7 +147,7 @@ export const prefetch = (
 ): Promise<void> => {
   if (Platform.OS === 'ios') {
     const { FasterImageViewManager } = NativeModules;
-    return FasterImageViewManager.prefetch(sources, options);
+    return FasterImageViewManager.prefetch(sources, options ?? {});
   } else {
     const { FasterImageModule } = NativeModules;
     return FasterImageModule.prefetch(sources, options);
