@@ -10,6 +10,7 @@ import android.graphics.RectF
 import android.graphics.Path
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
+import android.graphics.Matrix
 import android.net.Uri
 import android.os.Build
 import android.util.Base64
@@ -104,6 +105,7 @@ class FasterImageViewManager : SimpleViewManager<AppCompatImageView>() {
     val thumbHash = options.getString("thumbhash")
     val blurHash = options.getString("blurhash")
     val resizeMode = options.getString("resizeMode")
+    val contentPosition = options.getString("contentPosition")
     val transitionDuration =
       if (options.hasKey("transitionDuration")) options.getInt("transitionDuration") else 100
     val cachePolicy = options.getString("cachePolicy")
@@ -131,6 +133,12 @@ class FasterImageViewManager : SimpleViewManager<AppCompatImageView>() {
       view.scaleType = RESIZE_MODE[resizeMode]
     } else {
       view.scaleType = ScaleType.FIT_CENTER
+    }
+
+    // TODO: I can't find a way to support contentposition without overriding the
+    // scaleType
+    if (!contentPosition.isNullOrEmpty()) {
+      view.scaleType = ScaleType.MATRIX
     }
 
     val drawablePlaceholder: Drawable? = base64Placeholder?.let { getDrawableFromBase64(it, view) }
@@ -185,6 +193,37 @@ class FasterImageViewManager : SimpleViewManager<AppCompatImageView>() {
           reactContext
             .getJSModule(RCTEventEmitter::class.java)
             .receiveEvent(view.id, "onSuccess", event)
+
+          if (!contentPosition.isNullOrEmpty()) {
+            val imageWidth = result.intrinsicWidth.toFloat()
+            val imageHeight = result.intrinsicHeight.toFloat()
+            val viewWidth = view.width.toFloat()
+            val viewHeight = view.height.toFloat()
+            
+            val matrix = Matrix()
+            
+            val src = RectF(0f, 0f, imageWidth, imageHeight)
+            
+            val scale = Math.min(viewWidth / imageWidth, viewHeight / imageHeight)
+            val scaledWidth = imageWidth * scale
+            val scaledHeight = imageHeight * scale
+            
+            val left = when (contentPosition) {
+              "left", "topLeft", "bottomLeft" -> 0f
+              "right", "topRight", "bottomRight" -> viewWidth - scaledWidth
+              else -> (viewWidth - scaledWidth) / 2 // centered horizontally
+            }
+            
+            val top = when (contentPosition) {
+              "top", "topLeft", "topRight" -> 0f
+              "bottom", "bottomLeft", "bottomRight" -> viewHeight - scaledHeight
+              else -> (viewHeight - scaledHeight) / 2 // centered vertically
+            }
+            
+            val dst = RectF(left, top, left + scaledWidth, top + scaledHeight)
+            matrix.setRectToRect(src, dst, Matrix.ScaleToFit.CENTER)
+            view.imageMatrix = matrix
+          }
 
           if (options.hasKey("colorMatrix")) {
             val colorMatrixDrawable = result.mutate()
@@ -327,6 +366,32 @@ class FasterImageViewManager : SimpleViewManager<AppCompatImageView>() {
       "fit" to Scale.FIT,
       "fill" to Scale.FILL
     )
+  }
+
+  private object ContentPosition {
+    const val CENTER = "center"
+    const val LEFT = "left"
+    const val RIGHT = "right"
+    const val TOP = "top"
+    const val BOTTOM = "bottom"
+    const val TOP_LEFT = "topLeft"
+    const val TOP_RIGHT = "topRight"
+    const val BOTTOM_LEFT = "bottomLeft"
+    const val BOTTOM_RIGHT = "bottomRight"
+    
+    fun toGravity(position: String?): Int {
+        return when (position) {
+          LEFT -> android.view.Gravity.LEFT or android.view.Gravity.CENTER_VERTICAL
+          RIGHT -> android.view.Gravity.RIGHT or android.view.Gravity.CENTER_VERTICAL
+          TOP -> android.view.Gravity.TOP or android.view.Gravity.CENTER_HORIZONTAL
+          BOTTOM -> android.view.Gravity.BOTTOM or android.view.Gravity.CENTER_HORIZONTAL
+          TOP_LEFT -> android.view.Gravity.TOP or android.view.Gravity.LEFT
+          TOP_RIGHT -> android.view.Gravity.TOP or android.view.Gravity.RIGHT
+          BOTTOM_LEFT -> android.view.Gravity.BOTTOM or android.view.Gravity.LEFT
+          BOTTOM_RIGHT -> android.view.Gravity.BOTTOM or android.view.Gravity.RIGHT
+          else -> android.view.Gravity.CENTER // default to center
+        }
+    }
   }
 }
 
