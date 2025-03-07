@@ -28,6 +28,16 @@ export type AndroidImageResizeMode =
   | 'top'
   | 'bottom';
 
+export type ContentPosition =
+  | 'top'
+  | 'bottom'
+  | 'left'
+  | 'right'
+  | 'topLeft'
+  | 'topRight'
+  | 'bottomLeft'
+  | 'bottomRight';
+
 /*
  * @property {string} url - URL of the image **required**
  * @property {string} [base64Placeholder] - Base64 encoded placeholder image
@@ -40,6 +50,7 @@ export type AndroidImageResizeMode =
  * @property {string} [failureImage] - Image to show when the image fails to load, pass blurhash, thumbhash or base64 encoded image
  * @property {boolean} [progressiveLoadingEnabled] - Enable progressive loading, defaults to false
  * @property {('memory' | 'discWithCacheControl' | 'discNoCacheControl')} [cachePolicy] - Cache [policy](https://kean-docs.github.io/nuke/documentation/nuke/imagepipeline), defaults to 'memory'. 'discWithCacheControl' will cache the image in the disc and use the cache control headers to determine if the image should be re-fetched. 'discNoCacheControl' will cache the image in the disc and never re-fetch it.
+ * @property {ContentPosition} [contentPosition] - Position of the image content within the image view
  * @property {number} [borderRadius] - Border radius of the image
  * @property {number} [borderTopLeftRadius] - Top left border radius of the image
  * @property {number} [borderTopRightRadius] - Top right border radius of the image
@@ -70,6 +81,7 @@ export type ImageOptions = {
     | 'discWithCacheControl'
     | 'discNoCacheControl'
     | 'memoryAndDisc';
+  contentPosition?: ContentPosition;
   failureImage?: string;
   progressiveLoadingEnabled?: boolean;
   base64Placeholder?: string;
