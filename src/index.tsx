@@ -153,12 +153,15 @@ export const clearCache = async () => {
   }
 };
 
-export const prefetch = (sources: string[]): Promise<void> => {
+export const prefetch = (
+  sources: string[],
+  options?: Pick<ImageOptions, 'headers'>
+): Promise<void> => {
   if (Platform.OS === 'ios') {
     const { FasterImageViewManager } = NativeModules;
-    return FasterImageViewManager.prefetch(sources);
+    return FasterImageViewManager.prefetch(sources, options ?? {});
   } else {
     const { FasterImageModule } = NativeModules;
-    return FasterImageModule.prefetch(sources);
+    return FasterImageModule.prefetch(sources, options);
   }
 };

@@ -10,6 +10,6 @@ RCT_EXPORT_VIEW_PROPERTY(onSuccess, RCTDirectEventBlock)
 
 RCT_EXTERN_METHOD(clearCache:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject)
 
-RCT_EXTERN_METHOD(prefetch:(NSArray *)sources withResolver:(RCTPromiseResolveBlock)resolve withRejecter:(RCTPromiseRejectBlock)reject)
+RCT_EXTERN_METHOD(prefetch:(NSArray *)sources withOptions:(nullable NSDictionary *)options withResolver:(RCTPromiseResolveBlock)resolve withRejecter:(RCTPromiseRejectBlock)reject)
 
 @end

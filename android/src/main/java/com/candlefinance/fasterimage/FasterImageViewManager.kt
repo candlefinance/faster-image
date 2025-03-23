@@ -64,15 +64,33 @@ class FasterImageModule(reactContext: ReactApplicationContext) :
   }
 
   @ReactMethod
-  fun prefetch(sources: ReadableArray, promise: Promise) {
-    val imageLoader = reactApplicationContext.imageLoader
-    val requests = sources.toArrayList().map { url ->
-      ImageRequest.Builder(reactApplicationContext)
-        .data(url as String)
-        .build()
+  fun prefetch(sources: ReadableArray, options: ReadableMap?, promise: Promise) {
+    try {
+      val imageLoader = reactApplicationContext.imageLoader
+      val headers = options?.getMap("headers")
+
+      val requests = sources.toArrayList().mapNotNull { url ->
+        if (url !is String) {
+          return@mapNotNull null
+        }
+
+        var requestBuilder = ImageRequest.Builder(reactApplicationContext)
+          .data(url)
+
+        headers?.let {
+          for (entry in it.entryIterator) {
+            requestBuilder = requestBuilder.setHeader(entry.key, entry.value as String)
+          }
+        }
+
+        requestBuilder.build()
+      }
+
+      requests.forEach { imageLoader.enqueue(it) }
+      promise.resolve(true)
+    } catch (e: Exception) {
+      promise.reject("PREFETCH_ERROR", "Failed to prefetch images: ${e.message}", e)
     }
-    requests.forEach { imageLoader.enqueue(it) }
-    promise.resolve(true)
   }
 }
 

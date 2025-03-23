@@ -22,14 +22,30 @@ final class FasterImageViewManager: RCTViewManager {
       }
     }
   }
-  
-  @objc(prefetch:withResolver:withRejecter:)
-  func prefetch(sources: [String],
+
+  @objc(prefetch:withOptions:withResolver:withRejecter:)
+  func prefetch(sources: [String], 
+                options: NSDictionary? = nil,
                 resolve: @escaping RCTPromiseResolveBlock,
                 reject: @escaping RCTPromiseRejectBlock) {
-    let prefetcher = ImagePrefetcher()
-    prefetcher.startPrefetching(with: sources.compactMap(URL.init(string:)))
-    resolve(true)
+
+      let prefetcher = ImagePrefetcher()
+
+      let urls = sources.compactMap(URL.init(string:))
+      let headers = options?["headers"] as? [String: String]
+
+      let imageRequests = urls.map { url in
+        var request = URLRequest(url: url)
+        if let headers = headers {
+            for (key, value) in headers {
+                request.addValue(value, forHTTPHeaderField: key)
+            }
+        }
+        return ImageRequest(urlRequest: request)
+      }
+
+      prefetcher.startPrefetching(with: imageRequests)
+      resolve(true)
   }
 }
 
