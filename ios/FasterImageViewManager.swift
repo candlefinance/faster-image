@@ -33,6 +33,82 @@ final class FasterImageViewManager: RCTViewManager {
   }
 }
 
+struct ContentPosition: Decodable {
+    var top: String?
+    var bottom: String?
+    var right: String?
+    var left: String?
+    
+    static let center = Self()
+    
+    func offsetX(contentWidth: CGFloat, containerWidth: CGFloat) -> CGFloat {
+      let diff = containerWidth - contentWidth
+      
+      if let leftDistance = distance(from: left) {
+        return -diff / 2 + leftDistance
+      }
+      
+      if let rightDistance = distance(from: right) {
+        return diff / 2 - rightDistance
+      }
+      
+      if let factor = factor(from: left) {
+        return -diff / 2 + diff * factor
+      }
+      
+      if let factor = factor(from: right) {
+        return diff / 2 - diff * factor
+      }
+
+      return 0
+    }
+    
+    func offsetY(contentHeight: CGFloat, containerHeight: CGFloat) -> CGFloat {
+        let diff = containerHeight - contentHeight
+        
+        if let topDistance = distance(from: top) {
+          return -diff / 2 + topDistance
+        }
+
+        if let bottomDistance = distance(from: bottom) {
+          return diff / 2 - bottomDistance
+        }
+        
+        if let factor = factor(from: top) {
+          return -diff / 2 + diff * factor
+        }
+        
+        if let factor = factor(from: bottom) {
+          return diff / 2 - diff * factor
+        }
+
+        return 0
+    }
+    
+    func offset(contentSize: CGSize, containerSize: CGSize) -> CGPoint {
+      return CGPoint(
+        x: offsetX(contentWidth: contentSize.width, containerWidth: containerSize.width),
+        y: offsetY(contentHeight: contentSize.height, containerHeight: containerSize.height)
+      )
+    }
+
+    private func distance(from value: String?) -> CGFloat? {
+      guard let value = value else { return nil }
+      return CGFloat(Double(value) ?? 0)
+    }
+
+    private func factor(from value: String?) -> CGFloat? {
+      guard let value = value else { return nil }
+      if value == "center" {
+          return 0.5
+      }
+      guard value.contains("%"), let percentage = Double(value.replacingOccurrences(of: "%", with: "")) else {
+          return nil
+      }
+      return CGFloat(percentage / 100)
+    }
+}
+
 struct ImageOptions: Decodable {
   let blurhash: String?
   let thumbhash: String?
@@ -41,6 +117,7 @@ struct ImageOptions: Decodable {
   let activityColor: String?
   let transitionDuration: Double?
   let cachePolicy: String?
+  let contentPosition: String?
   let failureImage: String?
   let base64Placeholder: String?
   let progressiveLoadingEnabled: Bool?
@@ -148,7 +225,10 @@ final class FasterImageView: UIView {
           bottomLeft: options.borderBottomLeftRadius ?? 0.0,
           bottomRight: options.borderBottomRightRadius ?? 0.0
         )
-        
+
+        if let position = options.contentPosition {
+          self.contentPositionString = position
+        }
         
         if let priority = options.priority {
           self.priority = ImageRequest.Priority.init(priority)
@@ -257,6 +337,70 @@ final class FasterImageView: UIView {
   override func layoutSubviews() {
     super.layoutSubviews()
     applyBorderRadii()
+    applyContentPosition()
+  }
+
+  private var needsContentPositioning = false
+
+  var contentPosition = ContentPosition()
+
+  var contentPositionString: String? {
+    didSet {
+        guard let positionString = contentPositionString else { return }
+        
+        switch positionString {
+          case "center":
+            contentPosition = ContentPosition()
+          case "left":
+            contentPosition = ContentPosition(right: nil, left: "0")
+          case "right":
+            contentPosition = ContentPosition(right: "0", left: nil)
+          case "top":
+            contentPosition = ContentPosition(top: "0", bottom: nil)
+          case "bottom":
+            contentPosition = ContentPosition(top: nil, bottom: "0")
+          case "topLeft":
+            contentPosition = ContentPosition(top: "0", bottom: nil, right: nil, left: "0")
+          case "topRight":
+            contentPosition = ContentPosition(top: "0", bottom: nil, right: "0", left: nil)
+          case "bottomLeft":
+            contentPosition = ContentPosition(top: nil, bottom: "0", right: nil, left: "0")
+          case "bottomRight":
+            contentPosition = ContentPosition(top: nil, bottom: "0", right: "0", left: nil)
+          default:
+            contentPosition = ContentPosition()
+        }
+
+        if lazyImageView.imageView.image != nil {
+          applyContentPosition()
+        } else {
+          needsContentPositioning = true
+        }
+    }
+  }
+
+  private func applyContentPosition() {
+    guard let imageSize = lazyImageView.imageView.image?.size else { return }
+    
+    let containerSize = bounds.size
+    let contentSize: CGSize
+    let imageAspect = imageSize.width / imageSize.height
+    let containerAspect = containerSize.width / containerSize.height
+    
+    if imageAspect > containerAspect {
+        contentSize = CGSize(
+            width: containerSize.width,
+            height: containerSize.width / imageAspect
+        )
+    } else {
+        contentSize = CGSize(
+            width: containerSize.height * imageAspect,
+            height: containerSize.height
+        )
+    }
+    
+    let offset = contentPosition.offset(contentSize: contentSize, containerSize: containerSize)
+    lazyImageView.imageView.frame.origin = offset
   }
   
   var borderRadii = BorderRadii() {
@@ -439,6 +583,9 @@ fileprivate extension FasterImageView {
   func completionHandler(with result: Result<ImageResponse, Error>) {
     switch result {
     case .success(let value):
+      if needsContentPositioning {
+          applyContentPosition()
+      }
       onSuccess?([
         "width": value.image.size.width,
         "height": value.image.size.height,
