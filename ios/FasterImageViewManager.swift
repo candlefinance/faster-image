@@ -24,23 +24,39 @@ final class FasterImageViewManager: RCTViewManager {
   }
 
   @objc(prefetch:withOptions:withResolver:withRejecter:)
-  func prefetch(sources: [String], 
+  func prefetch(sources: [String],
                 options: NSDictionary? = nil,
                 resolve: @escaping RCTPromiseResolveBlock,
                 reject: @escaping RCTPromiseRejectBlock) {
 
-      let prefetcher = ImagePrefetcher()
-
-      let urls = sources.compactMap(URL.init(string:))
+      let cachePolicy = options?["cachePolicy"] as? String ?? "memory"
+      let ignoreQuery = options?["ignoreQueryParamsForCacheKey"] as? Bool ?? false
       let headers = options?["headers"] as? [String: String]
 
-      let imageRequests = urls.map { url in
+      let prefetcher = ImagePrefetcher(
+        pipeline: CachePolicy(rawValue: cachePolicy)?.pipeline ?? .shared,
+        destination: cachePolicy == "memory" ? .memoryCache : .diskCache
+      )
+
+      let imageRequests = sources.compactMap { urlString -> ImageRequest? in
+        guard let url = URL(string: urlString) else { return nil }
         var request = URLRequest(url: url)
         if let headers = headers {
             for (key, value) in headers {
                 request.addValue(value, forHTTPHeaderField: key)
             }
         }
+
+        if ignoreQuery {
+          var components = URLComponents(url: url, resolvingAgainstBaseURL: false)
+          components?.query = nil
+          let cacheKey = components?.url?.absoluteString ?? url.absoluteString
+          return ImageRequest(
+            urlRequest: request,
+            userInfo: [.imageIdKey: cacheKey]
+          )
+        }
+
         return ImageRequest(urlRequest: request)
       }
 

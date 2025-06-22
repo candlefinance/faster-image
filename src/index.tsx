@@ -153,9 +153,14 @@ export const clearCache = async () => {
   }
 };
 
+export type PrefetchOptions = Pick<
+  ImageOptions,
+  'headers' | 'cachePolicy' | 'ignoreQueryParamsForCacheKey'
+>;
+
 export const prefetch = (
   sources: string[],
-  options?: Pick<ImageOptions, 'headers'>
+  options?: PrefetchOptions
 ): Promise<void> => {
   if (Platform.OS === 'ios') {
     const { FasterImageViewManager } = NativeModules;

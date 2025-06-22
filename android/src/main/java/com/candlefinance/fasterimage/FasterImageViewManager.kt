@@ -68,6 +68,8 @@ class FasterImageModule(reactContext: ReactApplicationContext) :
     try {
       val imageLoader = reactApplicationContext.imageLoader
       val headers = options?.getMap("headers")
+      val cachePolicy = options?.getString("cachePolicy") ?: "memory"
+      val ignoreQuery = options?.getBoolean("ignoreQueryParamsForCacheKey") ?: false
 
       val requests = sources.toArrayList().mapNotNull { url ->
         if (url !is String) {
@@ -82,6 +84,31 @@ class FasterImageModule(reactContext: ReactApplicationContext) :
             requestBuilder = requestBuilder.setHeader(entry.key, entry.value as String)
           }
         }
+
+        if (ignoreQuery) {
+          val uri = Uri.parse(url)
+          val keyUri = uri.buildUpon().clearQuery().build()
+          val cacheKey = keyUri.toString()
+          val memoryCacheKey = MemoryCache.Key(cacheKey)
+          requestBuilder = requestBuilder.memoryCacheKey(memoryCacheKey)
+          if (!cachePolicy.equals("memory")) {
+            requestBuilder = requestBuilder.diskCacheKey(cacheKey)
+          }
+        }
+
+        requestBuilder = requestBuilder
+          .memoryCachePolicy(
+            when (cachePolicy) {
+              "memory", "memoryAndDisc" -> CachePolicy.ENABLED
+              else -> CachePolicy.DISABLED
+            }
+          )
+          .diskCachePolicy(
+            when (cachePolicy) {
+              "discWithCacheControl", "discNoCacheControl", "memoryAndDisc" -> CachePolicy.ENABLED
+              else -> CachePolicy.DISABLED
+            }
+          )
 
         requestBuilder.build()
       }
