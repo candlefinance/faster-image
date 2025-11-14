@@ -165,3 +165,15 @@ export const prefetch = (
     return FasterImageModule.prefetch(sources, options);
   }
 };
+
+export const setColorSpace = (colorSpace: 'sRGB' | 'displayP3' | 'linearSRGB' | 'genericRGB'): Promise<void> => {
+  if (Platform.OS === 'ios') {
+    const { FasterImageViewManager } = NativeModules;
+    return FasterImageViewManager.setColorSpace(colorSpace);
+  } 
+  
+  // Android: Color space configuration is not implemented
+  // Coil 2.4.0 doesn't have native colorSpace() support (available in Coil 3.x)
+  // Return resolved promise to maintain API consistency
+  return Promise.resolve();
+};

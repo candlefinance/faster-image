@@ -47,6 +47,39 @@ final class FasterImageViewManager: RCTViewManager {
       prefetcher.startPrefetching(with: imageRequests)
       resolve(true)
   }
+  
+  @objc(setColorSpace:withResolver:withRejecter:)
+  func setColorSpace(_ colorSpaceName: String,
+                     resolve: @escaping RCTPromiseResolveBlock,
+                     reject: @escaping RCTPromiseRejectBlock) {
+    let cgColorSpace: CGColorSpace?
+    switch colorSpaceName.lowercased() {
+      case "srgb":
+        cgColorSpace = CGColorSpace(name: CGColorSpace.sRGB)
+      case "displayp3":
+        cgColorSpace = CGColorSpace(name: CGColorSpace.displayP3)
+      case "linearsrgb":
+        cgColorSpace = CGColorSpace(name: CGColorSpace.linearSRGB)
+      case "genericrgb":
+        cgColorSpace = CGColorSpaceCreateDeviceRGB()
+      default:
+        cgColorSpace = nil
+    }
+    
+    guard let colorSpace = cgColorSpace else {
+      reject("INVALID_COLOR_SPACE", "Failed to create color space: \(colorSpaceName)", nil)
+      return
+    }
+
+    let contextOptions: [CIContextOption: Any] = [
+      .workingColorSpace: colorSpace,
+      .outputColorSpace: colorSpace,
+      .priorityRequestLow: true
+    ]
+    
+    ImageProcessors.CoreImageFilter.context = CIContext(options: contextOptions)
+    resolve(true)
+  }
 }
 
 struct ContentPosition: Decodable {

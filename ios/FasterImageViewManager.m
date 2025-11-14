@@ -12,4 +12,6 @@ RCT_EXTERN_METHOD(clearCache:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromis
 
 RCT_EXTERN_METHOD(prefetch:(NSArray *)sources withOptions:(nullable NSDictionary *)options withResolver:(RCTPromiseResolveBlock)resolve withRejecter:(RCTPromiseRejectBlock)reject)
 
+RCT_EXTERN_METHOD(setColorSpace:(NSString *)colorSpaceName withResolver:(RCTPromiseResolveBlock)resolve withRejecter:(RCTPromiseRejectBlock)reject)
+
 @end

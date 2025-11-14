@@ -48,7 +48,7 @@ yarn add @candlefinance/faster-image
 ## Usage
 
 ```js
-import { FasterImageView, clearCache, prefetch } from '@candlefinance/faster-image';
+import { FasterImageView, clearCache, prefetch, setColorSpace } from '@candlefinance/faster-image';
 
 <FasterImageView
   style={styles.image}
@@ -69,7 +69,10 @@ import { FasterImageView, clearCache, prefetch } from '@candlefinance/faster-ima
 await clearCache();
 
 // Prefetch
-await prefetch(['https://picsum.photos/200/200?random=0'])
+await prefetch(['https://picsum.photos/200/200?random=0']);
+
+// Set color space
+await setColorSpace('sRGB');
 
 // Prefetch with headers
 const token = 'your-token';
