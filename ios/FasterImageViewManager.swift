@@ -428,38 +428,58 @@ final class FasterImageView: UIView {
   
   var grayscale = 0.0 {
     didSet {
-      if grayscale > 0 {
-        lazyImageView.processors = [
-          ImageProcessors.CoreImageFilter(
-            name: "CIColorControls",
-            parameters: [
-              "inputSaturation": 1.0 - grayscale,
-            ],
-            identifier: "custom.grayscale.\(grayscale)"
-          )
-        ]
-      }
+      updateProcessors()
     }
   }
     
   var colorMatrix = [[1.0, 0.0, 0.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0, 0.0], [0.0, 0.0, 1.0, 0.0, 0.0], [0.0, 0.0, 0.0, 1.0, 0.0]] {
       didSet {
-          if !colorMatrix.isEmpty && colorMatrix.count == 4 && colorMatrix.allSatisfy(({ $0.count == 5 })) {
-              lazyImageView.processors = [
-                  ImageProcessors.CoreImageFilter(
-                      name: "CIColorMatrix",
-                      parameters: [
-                        "inputRVector": CIVector(x: colorMatrix[0][0], y: colorMatrix[0][1], z: colorMatrix[0][2], w: colorMatrix[0][3]),
-                        "inputGVector": CIVector(x: colorMatrix[1][0], y: colorMatrix[1][1], z: colorMatrix[1][2], w: colorMatrix[1][3]),
-                        "inputBVector": CIVector(x: colorMatrix[2][0], y: colorMatrix[2][1], z: colorMatrix[2][2], w: colorMatrix[2][3]),
-                        "inputAVector": CIVector(x: colorMatrix[3][0], y: colorMatrix[3][1], z: colorMatrix[3][2], w: colorMatrix[3][3]),
-                        "inputBiasVector": CIVector(x: colorMatrix[0][4], y: colorMatrix[1][4], z: colorMatrix[2][4], w: colorMatrix[3][4]),
-                      ],
-                      identifier: "custom.colorMatrix"
-                  )
-              ]
-          }
+          updateProcessors()
       }
+  }
+
+  private func updateProcessors() {
+    var processors: [any ImageProcessing] = []
+
+    if grayscale > 0 {
+      processors.append(
+        ImageProcessors.CoreImageFilter(
+          name: "CIColorControls",
+          parameters: [
+            "inputSaturation": 1.0 - grayscale,
+          ],
+          identifier: "custom.grayscale.\(grayscale)"
+        )
+      )
+    }
+
+    if !colorMatrix.isEmpty && colorMatrix.count == 4 && colorMatrix.allSatisfy({ $0.count == 5 }) {
+      let identityMatrix: [[Double]] = [
+        [1.0, 0.0, 0.0, 0.0, 0.0],
+        [0.0, 1.0, 0.0, 0.0, 0.0],
+        [0.0, 0.0, 1.0, 0.0, 0.0],
+        [0.0, 0.0, 0.0, 1.0, 0.0]
+      ]
+      let isIdentity = colorMatrix == identityMatrix
+      
+      if !isIdentity {
+        processors.append(
+          ImageProcessors.CoreImageFilter(
+            name: "CIColorMatrix",
+            parameters: [
+              "inputRVector": CIVector(x: colorMatrix[0][0], y: colorMatrix[0][1], z: colorMatrix[0][2], w: colorMatrix[0][3]),
+              "inputGVector": CIVector(x: colorMatrix[1][0], y: colorMatrix[1][1], z: colorMatrix[1][2], w: colorMatrix[1][3]),
+              "inputBVector": CIVector(x: colorMatrix[2][0], y: colorMatrix[2][1], z: colorMatrix[2][2], w: colorMatrix[2][3]),
+              "inputAVector": CIVector(x: colorMatrix[3][0], y: colorMatrix[3][1], z: colorMatrix[3][2], w: colorMatrix[3][3]),
+              "inputBiasVector": CIVector(x: colorMatrix[0][4], y: colorMatrix[1][4], z: colorMatrix[2][4], w: colorMatrix[3][4]),
+            ],
+            identifier: generateColorMatrixIdentifier(from: colorMatrix)
+          )
+        )
+      }
+    }
+    
+    lazyImageView.processors = processors.isEmpty ? nil : processors
   }
   
   var showActivityIndicator = false {
@@ -586,7 +606,15 @@ final class FasterImageView: UIView {
   
   var urlRequest: URLRequest? = nil {
     didSet {
-      lazyImageView.request = ImageRequest(urlRequest: urlRequest!, priority: priority)
+      guard let urlRequest = urlRequest else { return }
+      var request = ImageRequest(urlRequest: urlRequest, priority: priority)
+      
+      // Apply processors if they exist (from grayscale and/or colorMatrix)
+      if let processors = lazyImageView.processors, !processors.isEmpty {
+        request.processors = processors
+      }
+      
+      lazyImageView.request = request
     }
   }
   
@@ -595,6 +623,23 @@ final class FasterImageView: UIView {
 // MARK: - Extensions
 
 fileprivate extension FasterImageView {
+
+  func generateColorMatrixIdentifier(from matrix: [[Double]]) -> String {
+    let flattened = matrix.flatMap { $0 }
+    
+    var hasher = Hasher()
+    for value in flattened {
+      // Hash the exact bit representation to ensure identical matrices produce identical identifiers
+      // Important for cache key consistency
+      hasher.combine(value.bitPattern)
+    }
+    let hash = hasher.finalize()
+  
+    let hashValue = UInt64(bitPattern: Int64(hash))
+    let hashString = String(format: "%016llx", hashValue)
+    
+    return "custom.colorMatrix.\(hashString)"
+  }
   
   func completionHandler(with result: Result<ImageResponse, Error>) {
     switch result {
